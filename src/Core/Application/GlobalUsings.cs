@@ -1,0 +1,17 @@
+global using Ardalis.Specification;
+global using FluentValidation;
+global using MediatR;
+global using Microsoft.Extensions.Localization;
+global using Microsoft.Extensions.Logging;
+global using Squares.Application.Common.Events;
+global using Squares.Application.Common.Exceptions;
+global using Squares.Application.Common.FileStorage;
+global using Squares.Application.Common.Interfaces;
+global using Squares.Application.Common.Models;
+global using Squares.Application.Common.Persistence;
+global using Squares.Application.Common.Specification;
+global using Squares.Application.Common.Validation;
+global using Squares.Domain.Catalog;
+global using Squares.Domain.Common;
+global using Squares.Domain.Common.Contracts;
+global using Squares.Shared.Notifications;

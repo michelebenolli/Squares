@@ -1,0 +1,7 @@
+{
+  "LoggerSettings": {
+    "AppName": "Squares",
+    "WriteToFile": false,
+    "StructuredConsoleLogging": true
+  }
+}
