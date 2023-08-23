@@ -64,8 +64,7 @@ internal class TokenService : ITokenService
             throw new UnauthorizedException(_localizer["Il tenant non è attivo"]);
         }
 
-        var permissions = await _userService.GetPermissionsAsync(user.Id, token);
-        if (!user.IsActive || permissions?.Any() != true)
+        if (!user.IsActive)
         {
             throw new UnauthorizedException(_localizer["L'utente non è attivo"]);
         }
@@ -74,6 +73,7 @@ internal class TokenService : ITokenService
             .Include(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == user.Id, token);
 
+        var permissions = await _userService.GetPermissionsAsync(user.Id, token);
         return await GenerateTokensAndUpdateUser(user!, permissions);
     }
 

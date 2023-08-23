@@ -5,9 +5,7 @@ public class UpdateUserRequest : IRequest
     public string FirstName { get; set; } = default!;
     public string LastName { get; set; } = default!;
     public string Email { get; set; } = default!;
-    public string? Code { get; set; }
     public string? PhoneNumber { get; set; }
-    public int? QualificationId { get; set; }
 
     public List<int>? Roles { get; set; }
 }

@@ -1,10 +1,8 @@
 {
   "MailSettings": {
-    "DisplayName": "Mukesh Murugan",
-    "From": "mukesh@fullstackhero.net",
-    "Host": "smtp.ethereal.email",
-    "Password": "AdEqEKB4QwWX9Xey82",
-    "Port": 587,
-    "UserName": "nestor91@ethereal.email"
+    "DisplayName": "Squares",
+    "From": "noreply@graffiti.it",
+    "Host": "10.10.20.55",
+    "Port": 25
   }
 }

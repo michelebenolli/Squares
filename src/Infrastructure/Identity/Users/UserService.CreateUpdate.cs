@@ -1,5 +1,4 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
-using GPL.Application.Identity.Users.Requests;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -187,7 +186,7 @@ internal partial class UserService
         user.UserName = userName;
         user.User.UserName = userName;
 
-        var result = await _userManager.CreateAsync(user);
+        var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
             throw new InternalServerException(_localizer["Operazione non riuscita"]);

@@ -88,5 +88,5 @@ public class AccountController : VersionNeutralApiController
         return Ok();
     }
 
-    private string GetOrigin() => "http://localhost:4200"; // TODO: => $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
+    private string GetOrigin() => $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
 }

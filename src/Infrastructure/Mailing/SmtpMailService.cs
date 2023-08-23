@@ -17,7 +17,7 @@ public class SmtpMailService : IMailService
         _logger = logger;
     }
 
-    public async Task SendAsync(MailRequest request, CancellationToken cancellationToken = default)
+    public async Task SendAsync(MailRequest request, CancellationToken token = default)
     {
         try
         {
@@ -71,10 +71,13 @@ public class SmtpMailService : IMailService
             email.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls, cancellationToken);
-            await smtp.AuthenticateAsync(_settings.UserName, _settings.Password, cancellationToken);
-            await smtp.SendAsync(email, cancellationToken);
-            await smtp.DisconnectAsync(true, cancellationToken);
+            await smtp.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.None);
+
+            // TODO: Authentication
+            // await smtp.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls, token);
+            // await smtp.AuthenticateAsync(_settings.UserName, _settings.Password, token);
+            await smtp.SendAsync(email, token);
+            await smtp.DisconnectAsync(true, token);
         }
         catch (Exception ex)
         {

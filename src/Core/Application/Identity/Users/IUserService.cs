@@ -1,4 +1,3 @@
-using GPL.Application.Identity.Users.Requests;
 using Squares.Application.Identity.Account.Requests;
 using Squares.Application.Identity.Roles;
 using Squares.Application.Identity.Users.Requests;

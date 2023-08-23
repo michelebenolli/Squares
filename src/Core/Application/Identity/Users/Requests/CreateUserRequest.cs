@@ -5,6 +5,7 @@ public class CreateUserRequest : IRequest<int>
     public string LastName { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string? PhoneNumber { get; set; }
+    public string? Origin { get; set; }
 
     public List<int>? Roles { get; set; }
 }
@@ -20,6 +21,6 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, int>
 
     public async Task<int> Handle(CreateUserRequest request, CancellationToken _)
     {
-        return await _userService.CreateAsync(request, string.Empty);
+        return await _userService.CreateAsync(request, request.Origin!);
     }
 }

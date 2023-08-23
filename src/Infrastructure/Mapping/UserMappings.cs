@@ -25,6 +25,11 @@ public class UserMappings : Profile
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(_ => true))
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
 
+        CreateMap<RegisterUserRequest, User>();
+        CreateMap<RegisterUserRequest, ApplicationUser>()
+            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(_ => true))
+            .ForMember(dest => dest.User, opt => opt.MapFrom(src => src));
+
         CreateMap<UpdateUserRequest, User>();
         CreateMap<UpdateUserRequest, ApplicationUser>()
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(_ => true))
