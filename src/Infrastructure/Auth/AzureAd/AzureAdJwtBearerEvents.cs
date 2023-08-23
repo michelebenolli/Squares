@@ -1,25 +1,28 @@
 ﻿using Finbuckle.MultiTenant;
+using Squares.Application.Common.Exceptions;
+using Squares.Application.Identity.Users;
+using Squares.Infrastructure.Multitenancy;
+using Squares.Shared.Authorization;
+using Squares.Shared.Multitenancy;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
 using Serilog;
-using Squares.Application.Common.Exceptions;
-using Squares.Application.Identity.Users;
-using Squares.Infrastructure.Multitenancy;
-using Squares.Shared.Authorization;
-using Squares.Shared.Multitenancy;
 using System.Security.Claims;
 
 namespace Squares.Infrastructure.Auth.AzureAd;
+
 internal class AzureAdJwtBearerEvents : JwtBearerEvents
 {
     private readonly ILogger _logger;
     private readonly IConfiguration _config;
 
-    public AzureAdJwtBearerEvents(ILogger logger, IConfiguration config) =>
+    public AzureAdJwtBearerEvents(ILogger logger, IConfiguration config)
+    {
         (_logger, _config) = (logger, config);
+    }
 
     public override Task AuthenticationFailed(AuthenticationFailedContext context)
     {
@@ -70,19 +73,19 @@ internal class AzureAdJwtBearerEvents : JwtBearerEvents
         var identity = principal.Identities.First();
 
         // Adding tenant claim.
-        identity.AddClaim(new Claim(FSHClaims.Tenant, tenant.Id));
+        identity.AddClaim(new Claim(AppClaims.Tenant, tenant.Id));
 
         // Set new tenant info to the HttpContext so the right connectionstring is used.
         context.HttpContext.TrySetTenantInfo(tenant, false);
 
         // Lookup local user or create one if none exist.
-        string userId = await context.HttpContext.RequestServices.GetRequiredService<IUserService>()
+        int userId = await context.HttpContext.RequestServices.GetRequiredService<IUserService>()
             .GetOrCreateFromPrincipalAsync(principal);
 
         // We use the nameidentifier claim to store the user id.
         var idClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
         identity.TryRemoveClaim(idClaim);
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId));
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId.ToString()));
 
         // And the email claim for the email.
         var upnClaim = principal.FindFirst(ClaimTypes.Upn);

@@ -1,120 +1,85 @@
+using Squares.Application.Identity.Roles;
 using Squares.Application.Identity.Users;
-using Squares.Application.Identity.Users.Password;
+using Squares.Application.Identity.Users.Requests;
 
 namespace Squares.Host.Controllers.Identity;
+
 public class UsersController : VersionNeutralApiController
 {
-    private readonly IUserService _userService;
-
-    public UsersController(IUserService userService) => _userService = userService;
+    [HttpPost("search")]
+    [Permission(AppAction.Search, AppResource.Users)]
+    [OpenApiOperation("Search users using available filters", "")]
+    public Task<PagedResponse<ApplicationUserDto>> SearchAsync(SearchUserRequest request)
+    {
+        return Mediator.Send(request);
+    }
 
     [HttpGet]
-    [MustHavePermission(FSHAction.View, FSHResource.Users)]
-    [OpenApiOperation("Get list of all users.", "")]
-    public Task<List<UserDetailsDto>> GetListAsync(CancellationToken cancellationToken)
+    [Permission(AppAction.View, AppResource.Users)]
+    [OpenApiOperation("Get list of all users", "")]
+    public Task<List<ApplicationUserDto>> GetListAsync()
     {
-        return _userService.GetListAsync(cancellationToken);
+        return Mediator.Send(new GetUsersRequest());
     }
 
     [HttpGet("{id}")]
-    [MustHavePermission(FSHAction.View, FSHResource.Users)]
-    [OpenApiOperation("Get a user's details.", "")]
-    public Task<UserDetailsDto> GetByIdAsync(string id, CancellationToken cancellationToken)
+    [Permission(AppAction.View, AppResource.Users)]
+    [OpenApiOperation("Get user details", "")]
+    public Task<ApplicationUserDto> GetAsync(int id)
     {
-        return _userService.GetAsync(id, cancellationToken);
-    }
-
-    [HttpGet("{id}/roles")]
-    [MustHavePermission(FSHAction.View, FSHResource.UserRoles)]
-    [OpenApiOperation("Get a user's roles.", "")]
-    public Task<List<UserRoleDto>> GetRolesAsync(string id, CancellationToken cancellationToken)
-    {
-        return _userService.GetRolesAsync(id, cancellationToken);
-    }
-
-    [HttpPost("{id}/roles")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Register))]
-    [MustHavePermission(FSHAction.Update, FSHResource.UserRoles)]
-    [OpenApiOperation("Update a user's assigned roles.", "")]
-    public Task<string> AssignRolesAsync(string id, UserRolesRequest request, CancellationToken cancellationToken)
-    {
-        return _userService.AssignRolesAsync(id, request, cancellationToken);
+        return Mediator.Send(new GetUserRequest(id));
     }
 
     [HttpPost]
-    [MustHavePermission(FSHAction.Create, FSHResource.Users)]
-    [OpenApiOperation("Creates a new user.", "")]
-    public Task<string> CreateAsync(CreateUserRequest request)
+    [Permission(AppAction.Create, AppResource.Users)]
+    [OpenApiOperation("Create a new user", "")]
+    public Task<int> CreateAsync(CreateUserRequest request)
     {
-        // TODO: check if registering anonymous users is actually allowed (should probably be an appsetting)
-        // and return UnAuthorized when it isn't
-        // Also: add other protection to prevent automatic posting (captcha?)
-        return _userService.CreateAsync(request, GetOriginFromRequest());
+        return Mediator.Send(request);
     }
 
-    [HttpPost("self-register")]
-    [TenantIdHeader]
-    [AllowAnonymous]
-    [OpenApiOperation("Anonymous user creates a user.", "")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Register))]
-    public Task<string> SelfRegisterAsync(CreateUserRequest request)
+    [HttpPut("{id}")]
+    [Permission(AppAction.Update, AppResource.Users)]
+    [OpenApiOperation("Update a user", "")]
+    public async Task<ActionResult> UpdateAsync(UpdateUserRequest request, int id)
     {
-        // TODO: check if registering anonymous users is actually allowed (should probably be an appsetting)
-        // and return UnAuthorized when it isn't
-        // Also: add other protection to prevent automatic posting (captcha?)
-        return _userService.CreateAsync(request, GetOriginFromRequest());
-    }
-
-    [HttpPost("{id}/toggle-status")]
-    [MustHavePermission(FSHAction.Update, FSHResource.Users)]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Register))]
-    [OpenApiOperation("Toggle a user's active status.", "")]
-    public async Task<ActionResult> ToggleStatusAsync(string id, ToggleUserStatusRequest request, CancellationToken cancellationToken)
-    {
-        if (id != request.UserId)
+        if (id != request.Id)
         {
             return BadRequest();
         }
 
-        await _userService.ToggleStatusAsync(request, cancellationToken);
+        await Mediator.Send(request);
         return Ok();
     }
 
-    [HttpGet("confirm-email")]
-    [AllowAnonymous]
-    [OpenApiOperation("Confirm email address for a user.", "")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Search))]
-    public Task<string> ConfirmEmailAsync([FromQuery] string tenant, [FromQuery] string userId, [FromQuery] string code, CancellationToken cancellationToken)
+    [HttpDelete("{id}")]
+    [Permission(AppAction.Delete, AppResource.Users)]
+    [OpenApiOperation("Delete a user", "")]
+    public Task DeleteAsync(int id)
     {
-        return _userService.ConfirmEmailAsync(userId, code, tenant, cancellationToken);
+        return Mediator.Send(new DeleteUserRequest(id));
     }
 
-    [HttpGet("confirm-phone-number")]
-    [AllowAnonymous]
-    [OpenApiOperation("Confirm phone number for a user.", "")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Search))]
-    public Task<string> ConfirmPhoneNumberAsync([FromQuery] string userId, [FromQuery] string code)
+    [HttpGet("{id}/roles")]
+    [Permission(AppAction.View, AppResource.UserRoles)]
+    [OpenApiOperation("Get the list of user roles", "")]
+    public Task<List<RoleDto>> GetRolesAsync(int id)
     {
-        return _userService.ConfirmPhoneNumberAsync(userId, code);
+        return Mediator.Send(new GetRolesRequest(id));
     }
 
-    [HttpPost("forgot-password")]
-    [AllowAnonymous]
-    [TenantIdHeader]
-    [OpenApiOperation("Request a password reset email for a user.", "")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Register))]
-    public Task<string> ForgotPasswordAsync(ForgotPasswordRequest request)
+    [HttpPut("{id}/toggle")]
+    [Permission(AppAction.Update, AppResource.Users)]
+    [ApiConventionMethod(typeof(ApiConventions), nameof(ApiConventions.Register))]
+    [OpenApiOperation("Toggle the user status", "")]
+    public async Task<ActionResult> ToggleAsync(int id, ToggleUserRequest request)
     {
-        return _userService.ForgotPasswordAsync(request, GetOriginFromRequest());
-    }
+        if (id != request.Id)
+        {
+            return BadRequest();
+        }
 
-    [HttpPost("reset-password")]
-    [OpenApiOperation("Reset a user's password.", "")]
-    [ApiConventionMethod(typeof(FSHApiConventions), nameof(FSHApiConventions.Register))]
-    public Task<string> ResetPasswordAsync(ResetPasswordRequest request)
-    {
-        return _userService.ResetPasswordAsync(request);
+        await Mediator.Send(request);
+        return Ok();
     }
-
-    private string GetOriginFromRequest() => $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
 }

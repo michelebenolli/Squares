@@ -1,22 +1,24 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Squares.Domain.Identity;
 using Squares.Infrastructure.Identity;
 using Squares.Infrastructure.Multitenancy;
 using Squares.Infrastructure.Persistence.Context;
 using Squares.Shared.Authorization;
 using Squares.Shared.Multitenancy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Squares.Infrastructure.Persistence.Initialization;
+
 internal class ApplicationDbSeeder
 {
-    private readonly FSHTenantInfo _currentTenant;
-    private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly AppTenant _currentTenant;
+    private readonly RoleManager<Role> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly CustomSeederRunner _seederRunner;
     private readonly ILogger<ApplicationDbSeeder> _logger;
 
-    public ApplicationDbSeeder(FSHTenantInfo currentTenant, RoleManager<ApplicationRole> roleManager, UserManager<ApplicationUser> userManager, CustomSeederRunner seederRunner, ILogger<ApplicationDbSeeder> logger)
+    public ApplicationDbSeeder(AppTenant currentTenant, RoleManager<Role> roleManager, UserManager<ApplicationUser> userManager, CustomSeederRunner seederRunner, ILogger<ApplicationDbSeeder> logger)
     {
         _currentTenant = currentTenant;
         _roleManager = roleManager;
@@ -25,55 +27,54 @@ internal class ApplicationDbSeeder
         _logger = logger;
     }
 
-    public async Task SeedDatabaseAsync(ApplicationDbContext dbContext, CancellationToken cancellationToken)
+    public async Task SeedDatabaseAsync(DatabaseContext dbContext, CancellationToken token)
     {
         await SeedRolesAsync(dbContext);
         await SeedAdminUserAsync();
-        await _seederRunner.RunSeedersAsync(cancellationToken);
+        await _seederRunner.RunSeedersAsync(token);
     }
 
-    private async Task SeedRolesAsync(ApplicationDbContext dbContext)
+    private async Task SeedRolesAsync(DatabaseContext dbContext)
     {
-        foreach (string roleName in FSHRoles.DefaultRoles)
+        foreach (string roleName in AppRoles.DefaultRoles)
         {
             if (await _roleManager.Roles.SingleOrDefaultAsync(r => r.Name == roleName)
-                is not ApplicationRole role)
+                is not Role role)
             {
                 // Create the role
-                _logger.LogInformation("Seeding {role} Role for '{tenantId}' Tenant.", roleName, _currentTenant.Id);
-                role = new ApplicationRole(roleName, $"{roleName} Role for {_currentTenant.Id} Tenant");
+                _logger.LogInformation("Seeding {role} role for '{tenantId}' tenant.", roleName, _currentTenant.Id);
+                role = new Role(roleName, $"{roleName} role for {_currentTenant.Id} tenant");
                 await _roleManager.CreateAsync(role);
             }
 
             // Assign permissions
-            if (roleName == FSHRoles.Basic)
+            if (roleName == AppRoles.Basic)
             {
-                await AssignPermissionsToRoleAsync(dbContext, FSHPermissions.Basic, role);
+                await AssignPermissionsToRoleAsync(dbContext, AppPermissions.Basic, role);
             }
-            else if (roleName == FSHRoles.Admin)
+            else if (roleName == AppRoles.Admin)
             {
-                await AssignPermissionsToRoleAsync(dbContext, FSHPermissions.Admin, role);
+                await AssignPermissionsToRoleAsync(dbContext, AppPermissions.Admin, role);
 
                 if (_currentTenant.Id == MultitenancyConstants.Root.Id)
                 {
-                    await AssignPermissionsToRoleAsync(dbContext, FSHPermissions.Root, role);
+                    await AssignPermissionsToRoleAsync(dbContext, AppPermissions.Root, role);
                 }
             }
         }
     }
 
-    private async Task AssignPermissionsToRoleAsync(ApplicationDbContext dbContext, IReadOnlyList<FSHPermission> permissions, ApplicationRole role)
+    private async Task AssignPermissionsToRoleAsync(DatabaseContext dbContext, IReadOnlyList<AppPermission> permissions, Role role)
     {
         var currentClaims = await _roleManager.GetClaimsAsync(role);
         foreach (var permission in permissions)
         {
-            if (!currentClaims.Any(c => c.Type == FSHClaims.Permission && c.Value == permission.Name))
+            if (!currentClaims.Any(c => c.Type == AppClaims.Permission && c.Value == permission.Name))
             {
-                _logger.LogInformation("Seeding {role} Permission '{permission}' for '{tenantId}' Tenant.", role.Name, permission.Name, _currentTenant.Id);
-                dbContext.RoleClaims.Add(new ApplicationRoleClaim
+                dbContext.RoleClaims.Add(new RoleClaim
                 {
                     RoleId = role.Id,
-                    ClaimType = FSHClaims.Permission,
+                    ClaimType = AppClaims.Permission,
                     ClaimValue = permission.Name,
                     CreatedBy = "ApplicationDbSeeder"
                 });
@@ -92,18 +93,24 @@ internal class ApplicationDbSeeder
         if (await _userManager.Users.FirstOrDefaultAsync(u => u.Email == _currentTenant.AdminEmail)
             is not ApplicationUser adminUser)
         {
-            string adminUserName = $"{_currentTenant.Id.Trim()}.{FSHRoles.Admin}".ToLowerInvariant();
+            string adminUserName = $"{_currentTenant.Id.Trim()}.{AppRoles.Admin}".ToLowerInvariant();
+
             adminUser = new ApplicationUser
             {
-                FirstName = _currentTenant.Id.Trim().ToLowerInvariant(),
-                LastName = FSHRoles.Admin,
                 Email = _currentTenant.AdminEmail,
                 UserName = adminUserName,
                 EmailConfirmed = true,
                 PhoneNumberConfirmed = true,
                 NormalizedEmail = _currentTenant.AdminEmail?.ToUpperInvariant(),
                 NormalizedUserName = adminUserName.ToUpperInvariant(),
-                IsActive = true
+                IsActive = true,
+                User = new User
+                {
+                    UserName = adminUserName,
+                    FirstName = _currentTenant.Id.Trim().ToLowerInvariant(),
+                    LastName = AppRoles.Admin,
+                    Email = _currentTenant.AdminEmail
+                }
             };
 
             _logger.LogInformation("Seeding Default Admin User for '{tenantId}' Tenant.", _currentTenant.Id);
@@ -113,10 +120,10 @@ internal class ApplicationDbSeeder
         }
 
         // Assign role to user
-        if (!await _userManager.IsInRoleAsync(adminUser, FSHRoles.Admin))
+        if (!await _userManager.IsInRoleAsync(adminUser, AppRoles.Admin))
         {
             _logger.LogInformation("Assigning Admin Role to Admin User for '{tenantId}' Tenant.", _currentTenant.Id);
-            await _userManager.AddToRoleAsync(adminUser, FSHRoles.Admin);
+            await _userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
         }
     }
 }

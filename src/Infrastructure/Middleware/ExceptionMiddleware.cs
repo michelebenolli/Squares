@@ -1,25 +1,23 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Localization;
-using Serilog;
-using Serilog.Context;
+using FluentValidation;
 using Squares.Application.Common.Exceptions;
 using Squares.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Http;
+using Serilog;
+using Serilog.Context;
 using System.Net;
 
 namespace Squares.Infrastructure.Middleware;
+
 internal class ExceptionMiddleware : IMiddleware
 {
     private readonly ICurrentUser _currentUser;
-    private readonly IStringLocalizer _t;
     private readonly ISerializerService _jsonSerializer;
 
     public ExceptionMiddleware(
         ICurrentUser currentUser,
-        IStringLocalizer<ExceptionMiddleware> localizer,
         ISerializerService jsonSerializer)
     {
         _currentUser = currentUser;
-        _t = localizer;
         _jsonSerializer = jsonSerializer;
     }
 
@@ -31,21 +29,23 @@ internal class ExceptionMiddleware : IMiddleware
         }
         catch (Exception exception)
         {
-            string email = _currentUser.GetUserEmail() is string userEmail ? userEmail : "Anonymous";
-            var userId = _currentUser.GetUserId();
-            string tenant = _currentUser.GetTenant() ?? string.Empty;
-            if (userId != Guid.Empty) LogContext.PushProperty("UserId", userId);
-            LogContext.PushProperty("UserEmail", email);
+            int userId = _currentUser.GetUserId();
+            string? email = _currentUser.GetUserEmail();
+            string? tenant = _currentUser.GetTenant();
+
+            if (userId != 0) LogContext.PushProperty("UserId", userId);
+            if (!string.IsNullOrEmpty(email)) LogContext.PushProperty("UserEmail", email);
             if (!string.IsNullOrEmpty(tenant)) LogContext.PushProperty("Tenant", tenant);
+
             string errorId = Guid.NewGuid().ToString();
             LogContext.PushProperty("ErrorId", errorId);
             LogContext.PushProperty("StackTrace", exception.StackTrace);
+
             var errorResult = new ErrorResult
             {
                 Source = exception.TargetSite?.DeclaringType?.FullName,
                 Exception = exception.Message.Trim(),
-                ErrorId = errorId,
-                SupportMessage = _t["Provide the ErrorId {0} to the support team for further analysis.", errorId]
+                ErrorId = errorId
             };
 
             if (exception is not CustomException && exception.InnerException != null)
@@ -56,31 +56,24 @@ internal class ExceptionMiddleware : IMiddleware
                 }
             }
 
-            if (exception is FluentValidation.ValidationException fluentException)
+            if (exception is ValidationException fluentException)
             {
-                errorResult.Exception = "One or More Validations failed.";
-                foreach (var error in fluentException.Errors)
-                {
-                    errorResult.Messages.Add(error.ErrorMessage);
-                }
+                errorResult.Exception = "One or more validations failed";
+                errorResult.Errors = GetErrors(fluentException);
             }
 
             switch (exception)
             {
                 case CustomException e:
                     errorResult.StatusCode = (int)e.StatusCode;
-                    if (e.ErrorMessages is not null)
-                    {
-                        errorResult.Messages = e.ErrorMessages;
-                    }
-
+                    if (e.ErrorMessages != null) errorResult.Messages = e.ErrorMessages;
                     break;
 
                 case KeyNotFoundException:
                     errorResult.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
 
-                case FluentValidation.ValidationException:
+                case ValidationException:
                     errorResult.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
 
@@ -89,7 +82,7 @@ internal class ExceptionMiddleware : IMiddleware
                     break;
             }
 
-            Log.Error($"{errorResult.Exception} Request failed with Status Code {errorResult.StatusCode} and Error Id {errorId}.");
+            Log.Error($"{errorResult.Exception} Request failed with Status Code {context.Response.StatusCode} and Error Id {errorId}.");
             var response = context.Response;
             if (!response.HasStarted)
             {
@@ -102,5 +95,12 @@ internal class ExceptionMiddleware : IMiddleware
                 Log.Warning("Can't write error response. Response has already started.");
             }
         }
+    }
+
+    private static Dictionary<string, List<string>> GetErrors(ValidationException exception)
+    {
+        return exception.Errors
+            .GroupBy(x => x.PropertyName)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.ErrorMessage).ToList());
     }
 }

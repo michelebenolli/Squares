@@ -2,8 +2,8 @@ namespace Squares.Domain.Common.Contracts;
 
 public interface IAuditableEntity
 {
-    public Guid CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
     public DateTime CreatedOn { get; }
-    public Guid LastModifiedBy { get; set; }
-    public DateTime? LastModifiedOn { get; set; }
+    public int ModifiedBy { get; set; }
+    public DateTime? ModifiedOn { get; set; }
 }

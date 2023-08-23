@@ -2,14 +2,9 @@ using MassTransit;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Squares.Domain.Common.Contracts;
-public abstract class BaseEntity : BaseEntity<DefaultIdType>
+public abstract class BaseEntity : IEntity
 {
-    protected BaseEntity() => Id = NewId.Next().ToGuid();
-}
-
-public abstract class BaseEntity<TId> : IEntity<TId>
-{
-    public TId Id { get; protected set; } = default!;
+    public int Id { get; set; } = default!;
 
     [NotMapped]
     public List<DomainEvent> DomainEvents { get; } = new();

@@ -1,7 +1,9 @@
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Squares.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Squares.Infrastructure.Auditing;
 
 namespace Squares.Infrastructure.Auditing;
+
 public class AuditTrail
 {
     private readonly ISerializerService _serializer;
@@ -13,7 +15,7 @@ public class AuditTrail
     }
 
     public EntityEntry Entry { get; }
-    public Guid UserId { get; set; }
+    public int UserId { get; set; }
     public string? TableName { get; set; }
     public Dictionary<string, object?> KeyValues { get; } = new();
     public Dictionary<string, object?> OldValues { get; } = new();

@@ -1,64 +1,74 @@
-﻿using Finbuckle.MultiTenant;
-using Mapster;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Options;
+﻿using AutoMapper;
+using Finbuckle.MultiTenant;
 using Squares.Application.Common.Exceptions;
 using Squares.Application.Common.Persistence;
 using Squares.Application.Multitenancy;
 using Squares.Infrastructure.Persistence;
 using Squares.Infrastructure.Persistence.Initialization;
+using Squares.Shared.Multitenancy;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using Squares.Application.Multitenancy.Requests;
 
 namespace Squares.Infrastructure.Multitenancy;
+
 internal class TenantService : ITenantService
 {
-    private readonly IMultiTenantStore<FSHTenantInfo> _tenantStore;
+    private readonly IMultiTenantStore<AppTenant> _tenantStore;
     private readonly IConnectionStringSecurer _csSecurer;
     private readonly IDatabaseInitializer _dbInitializer;
-    private readonly IStringLocalizer _t;
+    private readonly IStringLocalizer<TenantService> _localizer;
+    private readonly IMapper _mapper;
     private readonly DatabaseSettings _dbSettings;
 
     public TenantService(
-        IMultiTenantStore<FSHTenantInfo> tenantStore,
+        IMultiTenantStore<AppTenant> tenantStore,
         IConnectionStringSecurer csSecurer,
         IDatabaseInitializer dbInitializer,
         IStringLocalizer<TenantService> localizer,
-        IOptions<DatabaseSettings> dbSettings)
+        IOptions<DatabaseSettings> dbSettings,
+        IMapper mapper)
     {
         _tenantStore = tenantStore;
         _csSecurer = csSecurer;
         _dbInitializer = dbInitializer;
-        _t = localizer;
+        _localizer = localizer;
+        _mapper = mapper;
         _dbSettings = dbSettings.Value;
     }
 
-    public async Task<List<TenantDto>> GetAllAsync()
+    public async Task<List<TenantDto>> ListAsync()
     {
-        var tenants = (await _tenantStore.GetAllAsync()).Adapt<List<TenantDto>>();
-        tenants.ForEach(t => t.ConnectionString = _csSecurer.MakeSecure(t.ConnectionString));
+        var tenants = _mapper.Map<List<TenantDto>>(await _tenantStore.GetAllAsync());
+        tenants.ForEach(x => x.ConnectionString = _csSecurer.MakeSecure(x.ConnectionString));
         return tenants;
     }
 
-    public async Task<bool> ExistsWithIdAsync(string id) =>
-        await _tenantStore.TryGetAsync(id) is not null;
-
-    public async Task<bool> ExistsWithNameAsync(string name) =>
-        (await _tenantStore.GetAllAsync()).Any(t => t.Name == name);
-
-    public async Task<TenantDto> GetByIdAsync(string id) =>
-        (await GetTenantInfoAsync(id))
-            .Adapt<TenantDto>();
-
-    public async Task<string> CreateAsync(CreateTenantRequest request, CancellationToken cancellationToken)
+    public async Task<TenantDto> GetByIdAsync(string id)
     {
-        if (request.ConnectionString?.Trim() == _dbSettings.ConnectionString.Trim()) request.ConnectionString = string.Empty;
+        var tenant = await GetTenantInfoAsync(id);
+        return _mapper.Map<TenantDto>(tenant);
+    }
 
-        var tenant = new FSHTenantInfo(request.Id, request.Name, request.ConnectionString, request.AdminEmail, request.Issuer);
-        await _tenantStore.TryAddAsync(tenant);
+    public async Task<string> GetByDomainAsync(string domain)
+    {
+        var tenants = await _tenantStore.GetAllAsync();
+        var tenant = tenants?.FirstOrDefault(x => x.Domain == domain);
+        return tenant?.Id ?? MultitenancyConstants.Root.Id;
+    }
 
-        // TODO: run this in a hangfire job? will then have to send mail when it's ready or not
+    public async Task<string> CreateAsync(CreateTenantRequest request, CancellationToken token)
+    {
         try
         {
-            await _dbInitializer.InitializeApplicationDbForTenantAsync(tenant, cancellationToken);
+            if (request.ConnectionString?.Trim() == _dbSettings.ConnectionString.Trim())
+            {
+                request.ConnectionString = string.Empty;
+            }
+
+            var tenant = _mapper.Map<AppTenant>(request);
+            await _tenantStore.TryAddAsync(tenant);
+            await _dbInitializer.InitializeApplicationDbForTenantAsync(tenant, token);
         }
         catch
         {
@@ -66,47 +76,43 @@ internal class TenantService : ITenantService
             throw;
         }
 
-        return tenant.Id;
+        return request.Id;
     }
 
-    public async Task<string> ActivateAsync(string id)
+    public async Task UpdateAsync(UpdateTenantRequest request)
     {
-        var tenant = await GetTenantInfoAsync(id);
+        var tenant = await GetTenantInfoAsync(request.Id);
+        _mapper.Map(request, tenant);
 
-        if (tenant.IsActive)
+        await _tenantStore.TryUpdateAsync(tenant);
+    }
+
+    public async Task ToggleAsync(string id)
+    {
+        if (id == MultitenancyConstants.Root.Id)
         {
-            throw new ConflictException(_t["Tenant is already Activated."]);
+            throw new ConflictException(_localizer["Si è verificato un errore"]);
         }
 
-        tenant.Activate();
-
-        await _tenantStore.TryUpdateAsync(tenant);
-
-        return _t["Tenant {0} is now Activated.", id];
-    }
-
-    public async Task<string> DeactivateAsync(string id)
-    {
         var tenant = await GetTenantInfoAsync(id);
-        if (!tenant.IsActive)
-        {
-            throw new ConflictException(_t["Tenant is already Deactivated."]);
-        }
-
-        tenant.Deactivate();
+        tenant.IsActive = !tenant.IsActive;
         await _tenantStore.TryUpdateAsync(tenant);
-        return _t["Tenant {0} is now Deactivated.", id];
     }
 
-    public async Task<string> UpdateSubscription(string id, DateTime extendedExpiryDate)
+    public async Task<bool> ExistsWithIdAsync(string id)
     {
-        var tenant = await GetTenantInfoAsync(id);
-        tenant.SetValidity(extendedExpiryDate);
-        await _tenantStore.TryUpdateAsync(tenant);
-        return _t["Tenant {0}'s Subscription Upgraded. Now Valid till {1}.", id, tenant.ValidUpto];
+        return await _tenantStore.TryGetAsync(id) is not null;
     }
 
-    private async Task<FSHTenantInfo> GetTenantInfoAsync(string id) =>
-        await _tenantStore.TryGetAsync(id)
-            ?? throw new NotFoundException(_t["{0} {1} Not Found.", typeof(FSHTenantInfo).Name, id]);
+    public async Task<bool> ExistsWithNameAsync(string name)
+    {
+        var tenants = await _tenantStore.GetAllAsync();
+        return tenants.Any(x => x.Name == name);
+    }
+
+    private async Task<AppTenant> GetTenantInfoAsync(string id)
+    {
+        return await _tenantStore.TryGetAsync(id) ??
+            throw new NotFoundException(_localizer["Tenant non trovato"]);
+    }
 }

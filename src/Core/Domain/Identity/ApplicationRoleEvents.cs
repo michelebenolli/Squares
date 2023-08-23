@@ -2,15 +2,19 @@
 
 public abstract class ApplicationRoleEvent : DomainEvent
 {
-    public string RoleId { get; set; } = default!;
+    public int RoleId { get; set; }
     public string RoleName { get; set; } = default!;
-    protected ApplicationRoleEvent(string roleId, string roleName) =>
-        (RoleId, RoleName) = (roleId, roleName);
+
+    protected ApplicationRoleEvent(int roleId, string roleName)
+    {
+        RoleId = roleId;
+        RoleName = roleName;
+    }
 }
 
 public class ApplicationRoleCreatedEvent : ApplicationRoleEvent
 {
-    public ApplicationRoleCreatedEvent(string roleId, string roleName)
+    public ApplicationRoleCreatedEvent(int roleId, string roleName)
         : base(roleId, roleName)
     {
     }
@@ -20,16 +24,18 @@ public class ApplicationRoleUpdatedEvent : ApplicationRoleEvent
 {
     public bool PermissionsUpdated { get; set; }
 
-    public ApplicationRoleUpdatedEvent(string roleId, string roleName, bool permissionsUpdated = false)
-        : base(roleId, roleName) =>
+    public ApplicationRoleUpdatedEvent(int roleId, string roleName, bool permissionsUpdated = false)
+        : base(roleId, roleName)
+    {
         PermissionsUpdated = permissionsUpdated;
+    }
 }
 
 public class ApplicationRoleDeletedEvent : ApplicationRoleEvent
 {
     public bool PermissionsUpdated { get; set; }
 
-    public ApplicationRoleDeletedEvent(string roleId, string roleName)
+    public ApplicationRoleDeletedEvent(int roleId, string roleName)
         : base(roleId, roleName)
     {
     }

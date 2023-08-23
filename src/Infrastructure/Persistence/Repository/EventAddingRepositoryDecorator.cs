@@ -2,8 +2,10 @@
 using Squares.Application.Common.Persistence;
 using Squares.Domain.Common.Contracts;
 using Squares.Domain.Common.Events;
+using X.PagedList;
 
 namespace Squares.Infrastructure.Persistence.Repository;
+
 /// <summary>
 /// The repository that implements IRepositoryWithEvents.
 /// Implemented as a decorator. It only augments the Add,
@@ -12,84 +14,117 @@ namespace Squares.Infrastructure.Persistence.Repository;
 /// before delegating to the decorated repository.
 /// </summary>
 public class EventAddingRepositoryDecorator<T> : IRepositoryWithEvents<T>
-    where T : class, IAggregateRoot
+    where T : class, IEntity
 {
-    private readonly IRepository<T> _decorated;
+    private readonly IRepository<T> _repository;
 
-    public EventAddingRepositoryDecorator(IRepository<T> decorated) => _decorated = decorated;
+    public EventAddingRepositoryDecorator(IRepository<T> repository)
+    {
+        _repository = repository;
+    }
 
-    public Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
+    public void Insert(T entity)
     {
         entity.DomainEvents.Add(EntityCreatedEvent.WithEntity(entity));
-        return _decorated.AddAsync(entity, cancellationToken);
+        _repository.Insert(entity);
     }
 
-    public Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
+    public void Insert(IEnumerable<T>? entities)
     {
-        entity.DomainEvents.Add(EntityUpdatedEvent.WithEntity(entity));
-        return _decorated.UpdateAsync(entity, cancellationToken);
-    }
-
-    public Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
-    {
-        entity.DomainEvents.Add(EntityDeletedEvent.WithEntity(entity));
-        return _decorated.DeleteAsync(entity, cancellationToken);
-    }
-
-    public Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
-    {
-        foreach (var entity in entities)
+        if (entities?.Any() == true)
         {
-            entity.DomainEvents.Add(EntityDeletedEvent.WithEntity(entity));
+            foreach (var entity in entities)
+            {
+                entity.DomainEvents.Add(EntityCreatedEvent.WithEntity(entity));
+            }
         }
 
-        return _decorated.DeleteRangeAsync(entities, cancellationToken);
+        _repository.Insert(entities);
     }
 
-    // The rest of the methods are simply forwarded.
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-        _decorated.SaveChangesAsync(cancellationToken);
-    public Task<T?> GetByIdAsync<TId>(TId id, CancellationToken cancellationToken = default)
+    public void Update(T entity)
+    {
+        entity.DomainEvents.Add(EntityUpdatedEvent.WithEntity(entity));
+        _repository.Update(entity);
+    }
+
+    public void Update(IEnumerable<T>? entities)
+    {
+        if (entities?.Any() == true)
+        {
+            foreach (var entity in entities)
+            {
+                entity.DomainEvents.Add(EntityUpdatedEvent.WithEntity(entity));
+            }
+        }
+
+        _repository.Update(entities);
+    }
+
+    public void Delete(T entity)
+    {
+        entity.DomainEvents.Add(EntityDeletedEvent.WithEntity(entity));
+        _repository.Delete(entity);
+    }
+
+    public void Delete(IEnumerable<T>? entities)
+    {
+        if (entities?.Any() == true)
+        {
+            foreach (var entity in entities)
+            {
+                entity.DomainEvents.Add(EntityDeletedEvent.WithEntity(entity));
+            }
+        }
+
+        _repository.Delete(entities);
+    }
+
+    public void Sort<TS>(IEnumerable<TS>? entities, List<int> ids)
+        where TS : T, ISortable
+    {
+        if (entities?.Any() == true)
+        {
+            foreach (var entity in entities)
+            {
+                entity.DomainEvents.Add(EntitySortedEvent.WithEntity(entity));
+            }
+        }
+
+        _repository.Sort(entities, ids);
+    }
+
+    // The rest of the methods are simply forwarded
+    public Task<T?> GetByIdAsync<TId>(TId id, CancellationToken token = default)
         where TId : notnull =>
-        _decorated.GetByIdAsync(id, cancellationToken);
-    public Task<T?> GetBySpecAsync<TSpec>(TSpec specification, CancellationToken cancellationToken = default)
-        where TSpec : ISingleResultSpecification, ISpecification<T> =>
-        _decorated.FirstOrDefaultAsync(specification, cancellationToken);
-    public Task<TResult?> GetBySpecAsync<TResult>(ISpecification<T, TResult> specification, CancellationToken cancellationToken = default) =>
-        _decorated.FirstOrDefaultAsync(specification, cancellationToken);
-    public Task<List<T>> ListAsync(CancellationToken cancellationToken = default) =>
-        _decorated.ListAsync(cancellationToken);
-    public Task<List<T>> ListAsync(ISpecification<T> specification, CancellationToken cancellationToken = default) =>
-        _decorated.ListAsync(specification, cancellationToken);
-    public Task<List<TResult>> ListAsync<TResult>(ISpecification<T, TResult> specification, CancellationToken cancellationToken = default) =>
-        _decorated.ListAsync(specification, cancellationToken);
-    public Task<bool> AnyAsync(ISpecification<T> specification, CancellationToken cancellationToken = default) =>
-        _decorated.AnyAsync(specification, cancellationToken);
-    public Task<bool> AnyAsync(CancellationToken cancellationToken = default) =>
-        _decorated.AnyAsync(cancellationToken);
-    public Task<int> CountAsync(ISpecification<T> specification, CancellationToken cancellationToken = default) =>
-        _decorated.CountAsync(specification, cancellationToken);
-    public Task<int> CountAsync(CancellationToken cancellationToken = default) =>
-        _decorated.CountAsync(cancellationToken);
-
-    public Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default) =>
-        _decorated.AddRangeAsync(entities, cancellationToken);
-
-    public Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default) =>
-        _decorated.UpdateRangeAsync(entities, cancellationToken);
-
-    public Task<T?> GetBySpecAsync(ISpecification<T> specification, CancellationToken cancellationToken = default)
-    => _decorated.FirstOrDefaultAsync(specification, cancellationToken);
-
-    public Task<T?> FirstOrDefaultAsync(ISpecification<T> specification, CancellationToken cancellationToken = default)
-    => _decorated.FirstOrDefaultAsync(specification, cancellationToken);
-
-    public Task<TResult?> FirstOrDefaultAsync<TResult>(ISpecification<T, TResult> specification, CancellationToken cancellationToken = default) =>
-        _decorated.FirstOrDefaultAsync<TResult>(specification, cancellationToken);
-
-    public Task<T?> SingleOrDefaultAsync(ISingleResultSpecification<T> specification, CancellationToken cancellationToken = default) =>
-        _decorated.SingleOrDefaultAsync(specification, cancellationToken);
-
-    public Task<TResult?> SingleOrDefaultAsync<TResult>(ISingleResultSpecification<T, TResult> specification, CancellationToken cancellationToken = default) =>
-        _decorated.SingleOrDefaultAsync<TResult>(specification, cancellationToken);
+        _repository.GetByIdAsync(id, token);
+    public Task<List<T>> ListAsync(CancellationToken token = default) =>
+        _repository.ListAsync(token);
+    public Task<List<T>> ListAsync(ISpecification<T> specification, CancellationToken token = default) =>
+        _repository.ListAsync(specification, token);
+    public Task<List<TResult>> ListAsync<TResult>(ISpecification<T, TResult> specification, CancellationToken token = default) =>
+        _repository.ListAsync(specification, token);
+    public Task<T?> GetAsync(ISpecification<T> specification, CancellationToken token = default) =>
+    _repository.GetAsync(specification, token);
+    public Task<TResult?> GetAsync<TResult>(ISpecification<T, TResult> specification, CancellationToken token = default) =>
+        _repository.GetAsync(specification, token);
+    public Task<bool> AnyAsync(ISpecification<T> specification, CancellationToken token = default) =>
+        _repository.AnyAsync(specification, token);
+    public Task<bool> AnyAsync(CancellationToken token = default) =>
+        _repository.AnyAsync(token);
+    public Task<int> CountAsync(ISpecification<T> specification, CancellationToken token = default) =>
+        _repository.CountAsync(specification, token);
+    public Task<int> CountAsync(CancellationToken token = default) =>
+        _repository.CountAsync(token);
+    public Task<int> SaveAsync(CancellationToken token = default) =>
+        _repository.SaveAsync(token);
+    public Task<IPagedList<T>> PagedListAsync(
+        int pageNumber, int pageSize, CancellationToken token = default) =>
+        _repository.PagedListAsync(pageNumber, pageSize, token);
+    public Task<IPagedList<T>> PagedListAsync(
+        ISpecification<T> specification, int pageNumber, int pageSize, CancellationToken token = default) =>
+        _repository.PagedListAsync(specification, pageNumber, pageSize, token);
+    public Task<IPagedList<TResult>> PagedListAsync<TResult>(
+        ISpecification<T, TResult> specification, int pageNumber, int pageSize, CancellationToken token = default) =>
+        _repository.PagedListAsync(specification, pageNumber, pageSize, token);
 }

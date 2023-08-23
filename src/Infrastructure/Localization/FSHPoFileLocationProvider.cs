@@ -6,6 +6,7 @@ using OrchardCore.Localization;
 using Squares.Infrastructure.Common.Extensions;
 
 namespace Squares.Infrastructure.Localization;
+
 /// <summary>
 /// Provides PO files for FSH Localization.
 /// </summary>

@@ -6,12 +6,12 @@ using Squares.Infrastructure.Persistence.Context;
 namespace Squares.Infrastructure.Persistence.Initialization;
 internal class ApplicationDbInitializer
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly DatabaseContext _dbContext;
     private readonly ITenantInfo _currentTenant;
     private readonly ApplicationDbSeeder _dbSeeder;
     private readonly ILogger<ApplicationDbInitializer> _logger;
 
-    public ApplicationDbInitializer(ApplicationDbContext dbContext, ITenantInfo currentTenant, ApplicationDbSeeder dbSeeder, ILogger<ApplicationDbInitializer> logger)
+    public ApplicationDbInitializer(DatabaseContext dbContext, ITenantInfo currentTenant, ApplicationDbSeeder dbSeeder, ILogger<ApplicationDbInitializer> logger)
     {
         _dbContext = dbContext;
         _currentTenant = currentTenant;

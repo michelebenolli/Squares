@@ -1,31 +1,25 @@
 ﻿namespace Squares.Application.Common.Persistence;
 
-// The Repository for the Application Db
-// I(Read)RepositoryBase<T> is from Ardalis.Specification
-
 /// <summary>
-/// The regular read/write repository for an aggregate root.
+/// The regular read/write repository.
 /// </summary>
 public interface IRepository<T> : IRepositoryBase<T>
-    where T : class, IAggregateRoot
+    where T : class
 {
 }
 
 /// <summary>
-/// The read-only repository for an aggregate root.
+/// The read-only repository.
 /// </summary>
 public interface IReadRepository<T> : IReadRepositoryBase<T>
-    where T : class, IAggregateRoot
+    where T : class
 {
 }
 
 /// <summary>
-/// A special (read/write) repository for an aggregate root,
-/// that also adds EntityCreated, EntityUpdated or EntityDeleted
-/// events to the DomainEvents of the entities before adding,
-/// updating or deleting them.
+/// A read/write repository that also adds events before adding, updating or deleting entities.
 /// </summary>
 public interface IRepositoryWithEvents<T> : IRepositoryBase<T>
-    where T : class, IAggregateRoot
+    where T : class, IEntity
 {
 }

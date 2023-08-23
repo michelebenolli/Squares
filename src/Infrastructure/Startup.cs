@@ -1,9 +1,11 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Squares.Application.Common.Validation;
 using Squares.Infrastructure.Auth;
 using Squares.Infrastructure.BackgroundJobs;
 using Squares.Infrastructure.Caching;
@@ -12,7 +14,6 @@ using Squares.Infrastructure.Cors;
 using Squares.Infrastructure.FileStorage;
 using Squares.Infrastructure.Localization;
 using Squares.Infrastructure.Mailing;
-using Squares.Infrastructure.Mapping;
 using Squares.Infrastructure.Middleware;
 using Squares.Infrastructure.Multitenancy;
 using Squares.Infrastructure.Notifications;
@@ -31,20 +32,21 @@ public static class Startup
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        var applicationAssembly = typeof(Squares.Application.Startup).GetTypeInfo().Assembly;
-        MapsterSettings.Configure();
+        ValidatorOptions.Global.LanguageManager = new ValidationLanguageManager();
+
         return services
+            .AddAutoMapper(typeof(Startup), typeof(Application.Startup))
             .AddApiVersioning()
             .AddAuth(config)
             .AddBackgroundJobs(config)
             .AddCaching(config)
             .AddCorsPolicy(config)
             .AddExceptionMiddleware()
-            .AddBehaviours(applicationAssembly)
+            .AddBehaviours()
             .AddHealthCheck()
             .AddPOLocalization(config)
             .AddMailing(config)
-            .AddMediatR(Assembly.GetExecutingAssembly())
+            .AddMediatR(x => x.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()))
             .AddMultitenancy()
             .AddNotifications(config)
             .AddOpenApiDocumentation(config)

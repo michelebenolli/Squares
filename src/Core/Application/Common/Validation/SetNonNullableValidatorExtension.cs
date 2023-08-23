@@ -1,6 +1,7 @@
 ﻿using FluentValidation.Validators;
 
 namespace Squares.Application.Common.Validation;
+
 // SetValidator doesn't work when dealing with a nullable reference type
 // Use this SetNonNullableValidator extension method instead
 // For more info see https://github.com/FluentValidation/FluentValidation/issues/1648

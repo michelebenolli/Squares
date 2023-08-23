@@ -1,14 +1,18 @@
+using Squares.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Serilog;
 using Serilog.Context;
-using Squares.Application.Common.Interfaces;
 
 namespace Squares.Infrastructure.Middleware;
+
 public class ResponseLoggingMiddleware : IMiddleware
 {
     private readonly ICurrentUser _currentUser;
 
-    public ResponseLoggingMiddleware(ICurrentUser currentUser) => _currentUser = currentUser;
+    public ResponseLoggingMiddleware(ICurrentUser currentUser)
+    {
+        _currentUser = currentUser;
+    }
 
     public async Task InvokeAsync(HttpContext httpContext, RequestDelegate next)
     {
@@ -34,9 +38,10 @@ public class ResponseLoggingMiddleware : IMiddleware
         }
 
         string email = _currentUser.GetUserEmail() is string userEmail ? userEmail : "Anonymous";
-        var userId = _currentUser.GetUserId();
+        int userId = _currentUser.GetUserId();
         string tenant = _currentUser.GetTenant() ?? string.Empty;
-        if (userId != Guid.Empty) LogContext.PushProperty("UserId", userId);
+
+        if (userId != 0) LogContext.PushProperty("UserId", userId);
         LogContext.PushProperty("UserEmail", email);
         if (!string.IsNullOrEmpty(tenant)) LogContext.PushProperty("Tenant", tenant);
         LogContext.PushProperty("StatusCode", httpContext.Response.StatusCode);

@@ -1,123 +1,140 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Squares.Application.Common.Exceptions;
 using Squares.Application.Identity.Tokens;
+using Squares.Application.Identity.Tokens.Requests;
+using Squares.Application.Identity.Users;
 using Squares.Infrastructure.Auth;
 using Squares.Infrastructure.Auth.Jwt;
 using Squares.Infrastructure.Multitenancy;
 using Squares.Shared.Authorization;
 using Squares.Shared.Multitenancy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Squares.Infrastructure.Identity;
+
 internal class TokenService : ITokenService
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IStringLocalizer _t;
+    private readonly IStringLocalizer<TokenService> _localizer;
     private readonly SecuritySettings _securitySettings;
     private readonly JwtSettings _jwtSettings;
-    private readonly FSHTenantInfo? _currentTenant;
+    private readonly AppTenant? _currentTenant;
+    private readonly IUserService _userService;
 
     public TokenService(
         UserManager<ApplicationUser> userManager,
         IOptions<JwtSettings> jwtSettings,
         IStringLocalizer<TokenService> localizer,
-        FSHTenantInfo? currentTenant,
-        IOptions<SecuritySettings> securitySettings)
+        AppTenant? currentTenant,
+        IOptions<SecuritySettings> securitySettings,
+        IUserService userService)
     {
         _userManager = userManager;
-        _t = localizer;
+        _localizer = localizer;
         _jwtSettings = jwtSettings.Value;
         _currentTenant = currentTenant;
+        _userService = userService;
         _securitySettings = securitySettings.Value;
     }
 
-    public async Task<TokenResponse> GetTokenAsync(TokenRequest request, string ipAddress, CancellationToken cancellationToken)
+    public async Task<TokenDto> GetTokenAsync(TokenRequest request, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(_currentTenant?.Id)
             || await _userManager.FindByEmailAsync(request.Email.Trim().Normalize()) is not { } user
             || !await _userManager.CheckPasswordAsync(user, request.Password))
         {
-            throw new UnauthorizedException(_t["Authentication Failed."]);
-        }
-
-        if (!user.IsActive)
-        {
-            throw new UnauthorizedException(_t["User Not Active. Please contact the administrator."]);
+            throw new UnauthorizedException(_localizer["Autenticazione non riuscita"]);
         }
 
         if (_securitySettings.RequireConfirmedAccount && !user.EmailConfirmed)
         {
-            throw new UnauthorizedException(_t["E-Mail not confirmed."]);
+            throw new UnauthorizedException(_localizer["Email non confermata"]);
         }
 
-        if (_currentTenant.Id != MultitenancyConstants.Root.Id)
+        if (_currentTenant.Id != MultitenancyConstants.Root.Id && (!_currentTenant.IsActive ||
+           (_currentTenant.EndDate != null && DateTime.UtcNow > _currentTenant.EndDate)))
         {
-            if (!_currentTenant.IsActive)
-            {
-                throw new UnauthorizedException(_t["Tenant is not Active. Please contact the Application Administrator."]);
-            }
-
-            if (DateTime.UtcNow > _currentTenant.ValidUpto)
-            {
-                throw new UnauthorizedException(_t["Tenant Validity Has Expired. Please contact the Application Administrator."]);
-            }
+            throw new UnauthorizedException(_localizer["Il tenant non è attivo"]);
         }
 
-        return await GenerateTokensAndUpdateUser(user, ipAddress);
+        var permissions = await _userService.GetPermissionsAsync(user.Id, token);
+        if (!user.IsActive || permissions?.Any() != true)
+        {
+            throw new UnauthorizedException(_localizer["L'utente non è attivo"]);
+        }
+
+        user = await _userManager.Users
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Id == user.Id, token);
+
+        return await GenerateTokensAndUpdateUser(user!, permissions);
     }
 
-    public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request, string ipAddress)
+    public async Task<TokenDto> RefreshTokenAsync(RefreshTokenRequest request)
     {
         var userPrincipal = GetPrincipalFromExpiredToken(request.Token);
         string? userEmail = userPrincipal.GetEmail();
+
+        // TODO: Check here if the tenant is null (it is given in JWT, no?)
+        // ERROR HERE, null (because tenant not set in request header and JWT not given?)
         var user = await _userManager.FindByEmailAsync(userEmail!);
         if (user is null)
         {
-            throw new UnauthorizedException(_t["Authentication Failed."]);
+            throw new UnauthorizedException(_localizer["Autenticazione non riuscita"]);
         }
 
         if (user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
-            throw new UnauthorizedException(_t["Invalid Refresh Token."]);
+            throw new UnauthorizedException(_localizer["Refresh token non valido"]);
         }
 
-        return await GenerateTokensAndUpdateUser(user, ipAddress);
+        user = await _userManager.Users.Include(x => x.User).FirstOrDefaultAsync(x => x.Id == user.Id);
+        var permissions = await _userService.GetPermissionsAsync(user!.Id);
+
+        return await GenerateTokensAndUpdateUser(user!, permissions);
     }
 
-    private async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress)
+    private async Task<TokenDto> GenerateTokensAndUpdateUser(ApplicationUser user, List<string> permissions)
     {
-        string token = GenerateJwt(user, ipAddress);
-
+        string token = GenerateJwt(user);
         user.RefreshToken = GenerateRefreshToken();
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays);
-
         await _userManager.UpdateAsync(user);
 
-        return new TokenResponse(token, user.RefreshToken, user.RefreshTokenExpiryTime);
+        return new TokenDto
+        {
+            Token = token,
+            RefreshToken = user.RefreshToken,
+            RefreshTokenExpiryTime = user.RefreshTokenExpiryTime,
+            Permissions = permissions
+        };
     }
 
-    private string GenerateJwt(ApplicationUser user, string ipAddress) =>
-        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
+    private string GenerateJwt(ApplicationUser user)
+    {
+        return GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user));
+    }
 
-    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress) =>
-        new List<Claim>
+    private IEnumerable<Claim> GetClaims(ApplicationUser user)
+    {
+        return new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email!),
-            new(FSHClaims.Fullname, $"{user.FirstName} {user.LastName}"),
-            new(ClaimTypes.Name, user.FirstName ?? string.Empty),
-            new(ClaimTypes.Surname, user.LastName ?? string.Empty),
-            new(FSHClaims.IpAddress, ipAddress),
-            new(FSHClaims.Tenant, _currentTenant!.Id),
-            new(FSHClaims.ImageUrl, user.ImageUrl ?? string.Empty),
+            new(ClaimTypes.Name, user.User.FirstName),
+            new(ClaimTypes.Surname, user.User.LastName),
+            new(AppClaims.Tenant, _currentTenant!.Id),
+            new(AppClaims.ImageUrl, user.User?.Image ?? string.Empty),
             new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
         };
+    }
 
     private static string GenerateRefreshToken()
     {
@@ -151,15 +168,12 @@ internal class TokenService : ITokenService
         };
         var tokenHandler = new JwtSecurityTokenHandler();
         var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+        return securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(
                 SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new UnauthorizedException(_t["Invalid Token."]);
-        }
-
-        return principal;
+                StringComparison.InvariantCultureIgnoreCase)
+            ? throw new UnauthorizedException(_localizer["Token non valido"])
+            : principal;
     }
 
     private SigningCredentials GetSigningCredentials()

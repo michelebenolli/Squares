@@ -2,10 +2,6 @@
 
 public interface IEntity
 {
+    int Id { get; }
     List<DomainEvent> DomainEvents { get; }
-}
-
-public interface IEntity<TId> : IEntity
-{
-    TId Id { get; }
 }

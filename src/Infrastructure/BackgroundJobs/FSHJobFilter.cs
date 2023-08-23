@@ -4,6 +4,7 @@ using Hangfire.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Squares.Infrastructure.Common;
+using Squares.Shared.Authorization;
 using Squares.Shared.Multitenancy;
 using System.Security.Claims;
 

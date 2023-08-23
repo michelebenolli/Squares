@@ -8,7 +8,7 @@ public class NewtonSoftService : ISerializerService
 {
     public T Deserialize<T>(string text)
     {
-        return JsonConvert.DeserializeObject<T>(text);
+        return JsonConvert.DeserializeObject<T>(text)!;
     }
 
     public string Serialize<T>(T obj)
@@ -19,7 +19,7 @@ public class NewtonSoftService : ISerializerService
             NullValueHandling = NullValueHandling.Ignore,
             Converters = new List<JsonConverter>
             {
-                new StringEnumConverter() { CamelCaseText = true }
+                new StringEnumConverter() { NamingStrategy = new CamelCaseNamingStrategy() }
             }
         });
     }

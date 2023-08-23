@@ -1,3 +1,5 @@
+using Squares.Domain.Common;
+
 namespace Squares.Application.Common.FileStorage;
 
 public interface IFileStorageService : ITransientService

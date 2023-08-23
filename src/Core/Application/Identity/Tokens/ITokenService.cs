@@ -1,8 +1,9 @@
+using Squares.Application.Identity.Tokens.Requests;
+
 namespace Squares.Application.Identity.Tokens;
 
 public interface ITokenService : ITransientService
 {
-    Task<TokenResponse> GetTokenAsync(TokenRequest request, string ipAddress, CancellationToken cancellationToken);
-
-    Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request, string ipAddress);
+    Task<TokenDto> GetTokenAsync(TokenRequest request, CancellationToken token);
+    Task<TokenDto> RefreshTokenAsync(RefreshTokenRequest request);
 }

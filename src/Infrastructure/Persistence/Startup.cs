@@ -29,7 +29,7 @@ internal static class Startup
             .ValidateOnStart();
 
         return services
-            .AddDbContext<ApplicationDbContext>((p, m) =>
+            .AddDbContext<DatabaseContext>((p, m) =>
             {
                 var databaseSettings = p.GetRequiredService<IOptions<DatabaseSettings>>().Value;
                 m.UseDatabase(databaseSettings.DBProvider, databaseSettings.ConnectionString);
@@ -38,7 +38,7 @@ internal static class Startup
             .AddTransient<IDatabaseInitializer, DatabaseInitializer>()
             .AddTransient<ApplicationDbInitializer>()
             .AddTransient<ApplicationDbSeeder>()
-            .AddServices(typeof(ICustomSeeder), ServiceLifetime.Transient)
+            .AddServices(typeof(ISeeder), ServiceLifetime.Transient)
             .AddTransient<CustomSeederRunner>()
 
             .AddTransient<IConnectionStringSecurer, ConnectionStringSecurer>()
@@ -71,21 +71,21 @@ internal static class Startup
         // Add Repositories
         services.AddScoped(typeof(IRepository<>), typeof(ApplicationDbRepository<>));
 
-        foreach (var aggregateRootType in
-            typeof(IAggregateRoot).Assembly.GetExportedTypes()
-                .Where(t => typeof(IAggregateRoot).IsAssignableFrom(t) && t.IsClass)
+        foreach (var entityType in
+            typeof(IEntity).Assembly.GetExportedTypes()
+                .Where(t => typeof(IEntity).IsAssignableFrom(t) && t.IsClass)
                 .ToList())
         {
             // Add ReadRepositories.
-            services.AddScoped(typeof(IReadRepository<>).MakeGenericType(aggregateRootType), sp =>
-                sp.GetRequiredService(typeof(IRepository<>).MakeGenericType(aggregateRootType)));
+            services.AddScoped(typeof(IReadRepository<>).MakeGenericType(entityType), sp =>
+                sp.GetRequiredService(typeof(IRepository<>).MakeGenericType(entityType)));
 
             // Decorate the repositories with EventAddingRepositoryDecorators and expose them as IRepositoryWithEvents.
-            services.AddScoped(typeof(IRepositoryWithEvents<>).MakeGenericType(aggregateRootType), sp =>
+            services.AddScoped(typeof(IRepositoryWithEvents<>).MakeGenericType(entityType), sp =>
                 Activator.CreateInstance(
-                    typeof(EventAddingRepositoryDecorator<>).MakeGenericType(aggregateRootType),
-                    sp.GetRequiredService(typeof(IRepository<>).MakeGenericType(aggregateRootType)))
-                ?? throw new InvalidOperationException($"Couldn't create EventAddingRepositoryDecorator for aggregateRootType {aggregateRootType.Name}"));
+                    typeof(EventAddingRepositoryDecorator<>).MakeGenericType(entityType),
+                    sp.GetRequiredService(typeof(IRepository<>).MakeGenericType(entityType)))
+                ?? throw new InvalidOperationException($"Couldn't create EventAddingRepositoryDecorator for entityType {entityType.Name}"));
         }
 
         return services;

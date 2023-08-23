@@ -1,23 +1,31 @@
-using Mapster;
-using Microsoft.EntityFrameworkCore;
+using Ardalis.Specification.EntityFrameworkCore;
+using AutoMapper;
 using Squares.Application.Auditing;
+using Squares.Application.Auditing.Requests;
 using Squares.Infrastructure.Persistence.Context;
+using X.PagedList;
 
 namespace Squares.Infrastructure.Auditing;
+
 public class AuditService : IAuditService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly DatabaseContext _context;
+    private readonly IMapper _mapper;
 
-    public AuditService(ApplicationDbContext context) => _context = context;
-
-    public async Task<List<AuditDto>> GetUserTrailsAsync(Guid userId)
+    public AuditService(
+        DatabaseContext context,
+        IMapper mapper)
     {
-        var trails = await _context.AuditTrails
-            .Where(a => a.UserId == userId)
-            .OrderByDescending(a => a.DateTime)
-            .Take(250)
-            .ToListAsync();
+        _context = context;
+        _mapper = mapper;
+    }
 
-        return trails.Adapt<List<AuditDto>>();
+    public async Task<IPagedList<TrailDto>> SearchAsync(SearchAuditRequest request, CancellationToken token)
+    {
+        var model = await _context.AuditTrails
+            .WithSpecification(new SearchAuditSpec(request))
+            .ToPagedListAsync(request.PageNumber, request.PageSize, token);
+
+        return _mapper.Map<IPagedList<TrailDto>>(model);
     }
 }

@@ -1,6 +1,8 @@
+using Squares.Application.Auditing.Requests;
+
 namespace Squares.Application.Auditing;
 
 public interface IAuditService : ITransientService
 {
-    Task<List<AuditDto>> GetUserTrailsAsync(Guid userId);
+    Task<IPagedList<TrailDto>> SearchAsync(SearchAuditRequest request, CancellationToken token);
 }

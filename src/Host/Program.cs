@@ -6,17 +6,26 @@ using Squares.Host.Controllers;
 using Squares.Infrastructure;
 using Squares.Infrastructure.Common;
 using Squares.Infrastructure.Logging.Serilog;
+using Newtonsoft.Json.Converters;
+using Squares.Application.Common.Utility;
 
-[assembly: ApiConventionType(typeof(FSHApiConventions))]
+[assembly: ApiConventionType(typeof(ApiConventions))]
 
 StaticLogger.EnsureInitialized();
-Log.Information("Server Booting Up...");
+Log.Information("Server starting...");
 try
 {
     var builder = WebApplication.CreateBuilder(args);
 
     builder.AddConfigurations().RegisterSerilog();
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddNewtonsoftJson(o =>
+        {
+            o.SerializerSettings.Converters.Add(new StringEnumConverter());
+            o.SerializerSettings.Converters.Add(new DateOnlyConverter());
+            o.SerializerSettings.Converters.Add(new TimeOnlyConverter());
+        });
+
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplication();
 

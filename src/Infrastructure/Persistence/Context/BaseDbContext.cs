@@ -1,24 +1,32 @@
 using Finbuckle.MultiTenant;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Options;
 using Squares.Application.Common.Events;
 using Squares.Application.Common.Interfaces;
 using Squares.Domain.Common.Contracts;
 using Squares.Infrastructure.Auditing;
 using Squares.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Options;
 using System.Data;
 
 namespace Squares.Infrastructure.Persistence.Context;
-public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUser, ApplicationRole, string, IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, ApplicationRoleClaim, IdentityUserToken<string>>
+
+public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUser, Role, int, IdentityUserClaim<int>,
+    IdentityUserRole<int>, IdentityUserLogin<int>, RoleClaim, IdentityUserToken<int>>
 {
     protected readonly ICurrentUser _currentUser;
     private readonly ISerializerService _serializer;
     private readonly DatabaseSettings _dbSettings;
     private readonly IEventPublisher _events;
 
-    protected BaseDbContext(ITenantInfo currentTenant, DbContextOptions options, ICurrentUser currentUser, ISerializerService serializer, IOptions<DatabaseSettings> dbSettings, IEventPublisher events)
+    protected BaseDbContext(
+        ITenantInfo currentTenant,
+        DbContextOptions options,
+        ICurrentUser currentUser,
+        ISerializerService serializer,
+        IOptions<DatabaseSettings> dbSettings,
+        IEventPublisher events)
         : base(currentTenant, options)
     {
         _currentUser = currentUser;
@@ -29,7 +37,6 @@ public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUs
 
     // Used by Dapper
     public IDbConnection Connection => Database.GetDbConnection();
-
     public DbSet<Trail> AuditTrails => Set<Trail>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,6 +46,9 @@ public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUs
 
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.UseSingularNames();
+        modelBuilder.EnumsToString();
+        modelBuilder.SetDecimalPrecision();
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
     }
 
@@ -61,40 +71,43 @@ public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUs
         }
     }
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+    public override async Task<int> SaveChangesAsync(CancellationToken token = new CancellationToken())
     {
         var auditEntries = HandleAuditingBeforeSaveChanges(_currentUser.GetUserId());
 
-        int result = await base.SaveChangesAsync(cancellationToken);
+        TenantNotSetMode = TenantNotSetMode.Overwrite;
+        int result = await base.SaveChangesAsync(token);
 
-        await HandleAuditingAfterSaveChangesAsync(auditEntries, cancellationToken);
+        await HandleAuditingAfterSaveChangesAsync(auditEntries, token);
 
         await SendDomainEventsAsync();
 
         return result;
     }
 
-    private List<AuditTrail> HandleAuditingBeforeSaveChanges(Guid userId)
+    private List<AuditTrail> HandleAuditingBeforeSaveChanges(int userId)
     {
         foreach (var entry in ChangeTracker.Entries<IAuditableEntity>().ToList())
         {
+            var now = DateTime.UtcNow;
+
             switch (entry.State)
             {
                 case EntityState.Added:
                     entry.Entity.CreatedBy = userId;
-                    entry.Entity.LastModifiedBy = userId;
+                    entry.Entity.ModifiedBy = userId;
                     break;
 
                 case EntityState.Modified:
-                    entry.Entity.LastModifiedOn = DateTime.UtcNow;
-                    entry.Entity.LastModifiedBy = userId;
+                    entry.Entity.ModifiedOn = now;
+                    entry.Entity.ModifiedBy = userId;
                     break;
 
                 case EntityState.Deleted:
                     if (entry.Entity is ISoftDelete softDelete)
                     {
                         softDelete.DeletedBy = userId;
-                        softDelete.DeletedOn = DateTime.UtcNow;
+                        softDelete.DeletedOn = now;
                         entry.State = EntityState.Modified;
                     }
 
@@ -171,7 +184,7 @@ public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUs
         return trailEntries.Where(e => e.HasTemporaryProperties).ToList();
     }
 
-    private Task HandleAuditingAfterSaveChangesAsync(List<AuditTrail> trailEntries, CancellationToken cancellationToken = new())
+    private Task HandleAuditingAfterSaveChangesAsync(List<AuditTrail> trailEntries, CancellationToken token = new())
     {
         if (trailEntries == null || trailEntries.Count == 0)
         {
@@ -195,7 +208,7 @@ public abstract class BaseDbContext : MultiTenantIdentityDbContext<ApplicationUs
             AuditTrails.Add(entry.ToAuditTrail());
         }
 
-        return SaveChangesAsync(cancellationToken);
+        return SaveChangesAsync(token);
     }
 
     private async Task SendDomainEventsAsync()

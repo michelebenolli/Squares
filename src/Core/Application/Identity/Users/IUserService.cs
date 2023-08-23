@@ -1,38 +1,32 @@
-using Squares.Application.Identity.Users.Password;
+using GPL.Application.Identity.Users.Requests;
+using Squares.Application.Identity.Account.Requests;
+using Squares.Application.Identity.Roles;
+using Squares.Application.Identity.Users.Requests;
 using System.Security.Claims;
 
 namespace Squares.Application.Identity.Users;
 public interface IUserService : ITransientService
 {
-    Task<PaginationResponse<UserDetailsDto>> SearchAsync(UserListFilter filter, CancellationToken cancellationToken);
-
-    Task<bool> ExistsWithNameAsync(string name);
-    Task<bool> ExistsWithEmailAsync(string email, string? exceptId = null);
-    Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, string? exceptId = null);
-
-    Task<List<UserDetailsDto>> GetListAsync(CancellationToken cancellationToken);
-
-    Task<int> GetCountAsync(CancellationToken cancellationToken);
-
-    Task<UserDetailsDto> GetAsync(string userId, CancellationToken cancellationToken);
-
-    Task<List<UserRoleDto>> GetRolesAsync(string userId, CancellationToken cancellationToken);
-    Task<string> AssignRolesAsync(string userId, UserRolesRequest request, CancellationToken cancellationToken);
-
-    Task<List<string>> GetPermissionsAsync(string userId, CancellationToken cancellationToken);
-    Task<bool> HasPermissionAsync(string userId, string permission, CancellationToken cancellationToken = default);
-    Task InvalidatePermissionCacheAsync(string userId, CancellationToken cancellationToken);
-
-    Task ToggleStatusAsync(ToggleUserStatusRequest request, CancellationToken cancellationToken);
-
-    Task<string> GetOrCreateFromPrincipalAsync(ClaimsPrincipal principal);
-    Task<string> CreateAsync(CreateUserRequest request, string origin);
-    Task UpdateAsync(UpdateUserRequest request, string userId);
-
-    Task<string> ConfirmEmailAsync(string userId, string code, string tenant, CancellationToken cancellationToken);
-    Task<string> ConfirmPhoneNumberAsync(string userId, string code);
-
-    Task<string> ForgotPasswordAsync(ForgotPasswordRequest request, string origin);
-    Task<string> ResetPasswordAsync(ResetPasswordRequest request);
-    Task ChangePasswordAsync(ChangePasswordRequest request, string userId);
+    Task<ApplicationUserDto?> GetByIdAsync(int userId, CancellationToken token);
+    Task<List<ApplicationUserDto>?> ListAsync(CancellationToken token);
+    Task<IPagedList<ApplicationUserDto>> SearchAsync(SearchUserRequest request, CancellationToken token);
+    Task<int> CreateAsync(CreateUserRequest request, string origin);
+    Task<int> RegisterAsync(RegisterUserRequest request, string origin);
+    Task UpdateAsync(UpdateUserRequest request, CancellationToken token);
+    Task DeleteAsync(int userId);
+    Task<int> GetCountAsync(CancellationToken token);
+    Task<int> GetOrCreateFromPrincipalAsync(ClaimsPrincipal principal);
+    Task<List<string>> GetPermissionsAsync(int userId);
+    Task<List<RoleDto>> GetRolesAsync(int userId, CancellationToken token);
+    Task<List<string>> GetPermissionsAsync(int userId, CancellationToken token);
+    Task<bool> HasPermissionAsync(int userId, string permission, CancellationToken token = default);
+    Task InvalidatePermissionCacheAsync(int userId, CancellationToken token);
+    Task ToggleAsync(int userId, bool active, CancellationToken token);
+    Task<bool> ExistsWithEmailAsync(string email, int? exceptId = null);
+    Task<bool> ExistsWithPhoneNumberAsync(string phoneNumber, int? exceptId = null);
+    Task ConfirmEmailAsync(int userId, string code, CancellationToken token);
+    Task ReconfirmEmailAsync(ConfirmEmailRequest request, string origin);
+    Task ForgotPasswordAsync(ForgotPasswordRequest request, string origin);
+    Task ResetPasswordAsync(ResetPasswordRequest request);
+    Task ChangePasswordAsync(ChangePasswordRequest request, int userId);
 }

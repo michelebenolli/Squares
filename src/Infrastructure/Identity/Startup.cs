@@ -7,7 +7,7 @@ internal static class Startup
 {
     internal static IServiceCollection AddIdentity(this IServiceCollection services) =>
         services
-            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            .AddIdentity<ApplicationUser, Role>(options =>
                 {
                     options.Password.RequiredLength = 6;
                     options.Password.RequireDigit = false;
@@ -16,7 +16,7 @@ internal static class Startup
                     options.Password.RequireUppercase = false;
                     options.User.RequireUniqueEmail = true;
                 })
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddEntityFrameworkStores<DatabaseContext>()
             .AddDefaultTokenProviders()
             .Services;
 }

@@ -1,9 +1,9 @@
 namespace Squares.Infrastructure.Auditing;
 
-public enum TrailType : byte
+public enum TrailType
 {
-    None = 0,
-    Create = 1,
-    Update = 2,
-    Delete = 3
+    None,
+    Create,
+    Update,
+    Delete
 }

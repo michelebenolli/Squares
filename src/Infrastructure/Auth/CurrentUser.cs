@@ -1,24 +1,28 @@
 using Squares.Application.Common.Interfaces;
+using Squares.Shared.Authorization;
 using System.Security.Claims;
 
 namespace Squares.Infrastructure.Auth;
+
 public class CurrentUser : ICurrentUser, ICurrentUserInitializer
 {
     private ClaimsPrincipal? _user;
 
     public string? Name => _user?.Identity?.Name;
 
-    private Guid _userId = Guid.Empty;
+    private int _userId;
 
-    public Guid GetUserId() =>
-        IsAuthenticated()
-            ? Guid.Parse(_user?.GetUserId() ?? Guid.Empty.ToString())
+    public int GetUserId()
+    {
+        return IsAuthenticated()
+            ? int.TryParse(_user?.GetUserId(), out int userId) ? userId : 0
             : _userId;
+    }
 
-    public string? GetUserEmail() =>
-        IsAuthenticated()
-            ? _user!.GetEmail()
-            : string.Empty;
+    public string? GetUserEmail()
+    {
+        return IsAuthenticated() ? _user!.GetEmail() : string.Empty;
+    }
 
     public bool IsAuthenticated() =>
         _user?.Identity?.IsAuthenticated is true;
@@ -44,14 +48,14 @@ public class CurrentUser : ICurrentUser, ICurrentUserInitializer
 
     public void SetCurrentUserId(string userId)
     {
-        if (_userId != Guid.Empty)
+        if (_userId != 0)
         {
             throw new Exception("Method reserved for in-scope initialization");
         }
 
         if (!string.IsNullOrEmpty(userId))
         {
-            _userId = Guid.Parse(userId);
+            _userId = int.Parse(userId);
         }
     }
 }
