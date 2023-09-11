@@ -23,6 +23,7 @@ public static class AppResource
     public const string UserRoles = nameof(UserRoles);
     public const string Roles = nameof(Roles);
     public const string RoleClaims = nameof(RoleClaims);
+    public const string Games = nameof(Games);
 }
 
 public static class AppPermissions
@@ -49,6 +50,10 @@ public static class AppPermissions
         new(AppAction.View, AppResource.Tenants, IsRoot: true),
         new(AppAction.Create, AppResource.Tenants, IsRoot: true),
         new(AppAction.Update, AppResource.Tenants, IsRoot: true),
+        new(AppAction.Search, AppResource.Games, IsBasic: true),
+        new(AppAction.View, AppResource.Games, IsBasic: true),
+        new(AppAction.Create, AppResource.Games, IsBasic: true),
+        new(AppAction.Delete, AppResource.Games)
     };
 
     public static IReadOnlyList<AppPermission> All { get; } = new ReadOnlyCollection<AppPermission>(_all);

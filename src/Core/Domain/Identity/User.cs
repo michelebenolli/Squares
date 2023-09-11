@@ -1,4 +1,6 @@
-﻿namespace Squares.Domain.Identity;
+﻿using Squares.Domain.Games;
+
+namespace Squares.Domain.Identity;
 
 public class User : AuditableEntity
 {
@@ -7,4 +9,6 @@ public class User : AuditableEntity
     public string LastName { get; set; } = default!;
     public string? Email { get; set; }
     public string? Image { get; set; }
+
+    public List<Game>? Games { get; set; }
 }

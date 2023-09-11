@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Squares.Application.Common.Events;
 using Squares.Application.Common.Interfaces;
+using Squares.Domain.Games;
 using Squares.Domain.Identity;
-using Squares.Infrastructure.Persistence.Configuration;
 
 namespace Squares.Infrastructure.Persistence.Context;
 public class DatabaseContext : BaseDbContext
@@ -21,4 +21,5 @@ public class DatabaseContext : BaseDbContext
     }
 
     public new DbSet<User> Users => Set<User>();
+    public DbSet<Game> Games => Set<Game>();
 }
