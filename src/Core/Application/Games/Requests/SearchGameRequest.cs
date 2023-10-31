@@ -1,4 +1,4 @@
-﻿using Squares.Domain.Games;
+﻿using Squares.Application.Games.Specifications;
 
 namespace Squares.Application.Games.Requests;
 public class SearchGameRequest : PagedRequest, IRequest<PagedResponse<GameDto>>
@@ -20,7 +20,7 @@ public class SearchGameHandler : IRequestHandler<SearchGameRequest, PagedRespons
 
     public async Task<PagedResponse<GameDto>> Handle(SearchGameRequest request, CancellationToken token)
     {
-        var model = await _games.PagedListAsync(new SearchSpec<Game>(request), request.PageNumber, request.PageSize, token);
+        var model = await _games.PagedListAsync(new SearchGameSpec(request), request.PageNumber, request.PageSize, token);
         return _mapper.Map<IPagedList<GameDto>>(model).ToPagedResponse();
     }
 }

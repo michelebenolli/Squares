@@ -1,0 +1,13 @@
+<ng-container *ngIf="true">
+    <ng-container [ngSwitch]="column.type">
+        <span *ngSwitchCase="DataType.Date">{{ column.value(item) | date: 'dd/MM/yyyy' }}</span>
+        <span *ngSwitchCase="DataType.DateTime">{{ column.value(item) | date: 'dd/MM/yyyy, hh:mm' }}</span>
+        <span *ngSwitchCase="DataType.Number">{{ column.value(item) | number }}</span>
+        <span *ngSwitchCase="DataType.Amount">{{ column.value(item) | currency: 'EUR': 'symbol' : undefined: 'it-IT' }}</span>
+        <span *ngSwitchCase="DataType.File">{{ column.value(item) }}</span>
+        <span *ngSwitchCase="DataType.Bool">{{ (column.value(item) ? 'Si': 'No') | translate }}</span>
+        <span *ngSwitchCase="DataType.Image"><img [src]="column.value(item)" class="table-image pe-2"></span>
+        <span *ngSwitchCase="DataType.Color"><i class="bi bi-circle-fill" [style.color]="column.value(item)"></i></span>
+        <span *ngSwitchDefault>{{ column.value(item) }}</span>
+    </ng-container>
+</ng-container>

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-      "diamond-ng": {
+      "client": {
           "projectType": "application",
           "schematics": {
               "@schematics/angular:component": {
@@ -17,7 +17,7 @@
               "build": {
                   "builder": "@angular-devkit/build-angular:browser",
                   "options": {
-                      "outputPath": "dist/diamond-ng",
+                      "outputPath": "dist/client",
                       "index": "src/index.html",
                       "main": "src/main.ts",
                       "polyfills": [
@@ -36,6 +36,19 @@
                   },
                   "configurations": {
                       "production": {
+                        "fileReplacements": [
+                            {
+                              "replace": "src/environments/environment.ts",
+                              "with": "src/environments/environment.prod.ts"
+                            }
+                          ],
+                          "optimization": true,
+                          "outputHashing": "all",
+                          "sourceMap": false,
+                          "namedChunks": false,
+                          "extractLicenses": true,
+                          "vendorChunk": false,
+                          "buildOptimizer": true,
                           "budgets": [
                               {
                                   "type": "initial",
@@ -47,8 +60,7 @@
                                   "maximumWarning": "2kb",
                                   "maximumError": "4kb"
                               }
-                          ],
-                          "outputHashing": "all"
+                          ]
                       },
                       "development": {
                           "buildOptimizer": false,
@@ -59,16 +71,16 @@
                           "namedChunks": true
                       }
                   },
-                  "defaultConfiguration": "production"
+                  "defaultConfiguration": ""
               },
               "serve": {
                   "builder": "@angular-devkit/build-angular:dev-server",
                   "configurations": {
                       "production": {
-                          "browserTarget": "diamond-ng:build:production"
+                          "browserTarget": "client:build:production"
                       },
                       "development": {
-                          "browserTarget": "diamond-ng:build:development"
+                          "browserTarget": "client:build:development"
                       }
                   },
                   "defaultConfiguration": "development"
@@ -76,7 +88,7 @@
               "extract-i18n": {
                   "builder": "@angular-devkit/build-angular:extract-i18n",
                   "options": {
-                      "browserTarget": "diamond-ng:build"
+                      "browserTarget": "client:build"
                   }
               },
               "test": {
@@ -98,6 +110,31 @@
                       ],
                       "scripts": []
                   }
+              },
+              "lint": {
+                "builder": "@angular-devkit/build-angular:tslint",
+                "options": {
+                  "tsConfig": [
+                    "tsconfig.app.json",
+                    "tsconfig.spec.json",
+                    "e2e/tsconfig.json"
+                  ],
+                  "exclude": [
+                    "**/node_modules/**"
+                  ]
+                }
+              },
+              "e2e": {
+                "builder": "@angular-devkit/build-angular:protractor",
+                "options": {
+                  "protractorConfig": "e2e/protractor.conf.js",
+                  "devServerTarget": "client:serve"
+                },
+                "configurations": {
+                  "production": {
+                    "devServerTarget": "client:serve:production"
+                  }
+                }
               }
           }
       }

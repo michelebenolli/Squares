@@ -1,0 +1,31 @@
+<div *ngIf="filters" class="filters d-flex">
+  <ng-container *ngFor="let filter of filters" [ngSwitch]="filter.type">
+
+    <!-- Text filter -->
+    <mat-form-field class="filter" *ngSwitchCase="filterType.Text" subscriptSizing="dynamic">
+      <mat-label *ngIf="filter.placeholder">{{ filter.placeholder | translate }}</mat-label>
+      <input matInput type="text" [(ngModel)]="filter.request.value" (ngModelChange)="onInputChange()">
+
+      <p-button matSuffix *ngIf="filter.request?.value" (click)="clearInput(filter)" icon="bi bi-x-lg"
+        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+    </mat-form-field>
+
+    <!-- Autocomplete filter -->
+    <ng-container *ngSwitchCase="filterType.Autocomplete">
+      <app-auto-complete class="filter" [filter]="filter" (valueChange)="valueChange($event)" />
+    </ng-container>
+
+    <!-- Single Date filter -->
+    <mat-form-field *ngSwitchCase="filterType.Date" subscriptSizing="dynamic">
+      <mat-label>{{ 'filter.placeholder' | translate }}</mat-label>
+      <input matInput [matDatepicker]="picker" placeholder="Seleziona una data" [value]="filter.request.value"
+        (dateChange)="dateChanged($event, filter.name)">
+
+      <p-button matSuffix *ngIf="filter.request?.value" (click)="clearInput(filter)" icon="bi bi-x-lg"
+        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+
+      <mat-datepicker-toggle *ngIf="!filter.request?.value" matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+  </ng-container>
+</div>

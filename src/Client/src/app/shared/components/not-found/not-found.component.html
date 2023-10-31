@@ -1,0 +1,8 @@
+<div class="p-5 min-h-screen flex justify-content-center align-items-center bg-cover bg-center"
+  [style]="{'background-image':'url(assets/images/auth-bg.svg)'}">
+  <div class="text-center">
+    <div class="font-bold text-white text-8xl">404</div>
+    <p class="text-white mb-5 text-2xl">{{ 'La pagina non è stata trovata' | translate }}</p>
+    <p-button [label]="'Ritorna alla home page' | translate" [routerLink]="['/']" styleClass="p-button-primary" />
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<form *ngIf="form" [formGroup]="form">
+  <mat-form-field class="w-100">
+    <mat-label>{{ 'Nome' | translate }}</mat-label>
+    <input matInput formControlName="firstName" required>
+    <mat-error *ngIf="form.get('firstName')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field class="w-100">
+    <mat-label>{{ 'Cognome' | translate }}</mat-label>
+    <input matInput formControlName="lastName" required>
+    <mat-error *ngIf="form.get('lastName')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field class="w-100">
+    <mat-label>{{ 'Email' | translate }}</mat-label>
+    <input type="email" matInput formControlName="email" required>
+    <mat-error *ngIf="form.get('email')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+    <mat-error *ngIf="form.get('email')?.errors?.['email']">{{ 'error.email' | translate }}</mat-error>
+  </mat-form-field>
+
+  <app-picker
+    [label]="'Ruoli' | translate"
+    [config]="rolesPickerConfig"
+    [data]="roles"
+    [control]="form.get('roles')" />
+</form>

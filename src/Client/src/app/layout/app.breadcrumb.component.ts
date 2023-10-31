@@ -19,7 +19,7 @@ export class AppBreadcrumbComponent {
     readonly breadcrumbs$ = this._breadcrumbs$.asObservable();
 
     constructor(private router: Router) {
-        this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(event => {
+        this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
             const root = this.router.routerState.snapshot.root;
             const breadcrumbs: Breadcrumb[] = [];
             this.addBreadcrumb(root, [], breadcrumbs);

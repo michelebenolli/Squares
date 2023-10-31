@@ -1,0 +1,38 @@
+.field {
+  position: relative;
+  border: 1px solid rgb(158, 158, 158);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+label {
+  color: rgba(0, 0, 0, 0.6) !important;
+  font-size: 11px !important;
+  position: absolute;
+  top: -8px;
+  left: 11px;
+  padding: 0 4px;
+  background: white;
+}
+
+.list-group {
+  border-radius: 4px;
+}
+
+.list-group-item {
+  border-bottom: 1px solid #ebedef !important;
+
+  &:last-of-type {
+    border-bottom: none !important;
+  }
+}
+
+mat-error {
+  padding: 0 1rem;
+  font-size: smaller;
+}
+
+.btn-error {
+  border-color: #e9545b !important;
+  color: #e9545b !important;
+}

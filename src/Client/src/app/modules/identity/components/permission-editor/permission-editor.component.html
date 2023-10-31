@@ -1,0 +1,29 @@
+<mat-selection-list *ngIf="groups && selection">
+  <mat-accordion>
+    <mat-expansion-panel *ngFor="let group of groups">
+
+      <mat-expansion-panel-header>
+        <mat-panel-title class="w-100">
+          <mat-checkbox color="primary" class="me-2"
+            [checked]="group.selected === group.permissions.length"
+            [indeterminate]="group.selected !== group.permissions.length && group.selected > 0"
+            (change)="toggleAll(group)"
+            (click)="$event.stopPropagation()">
+          </mat-checkbox>
+          {{ group.resource | translate }}
+        </mat-panel-title>
+        <mat-panel-description class="flex-shrink-1">
+            {{ group.selected + '/' + group.permissions.length }}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <mat-list-option
+        *ngFor="let permission of group.permissions"
+        (click)="toggle(group, permission)"
+        [selected]="selection.isSelected(permission)">
+        {{ permission.action | translate }}
+      </mat-list-option>
+
+    </mat-expansion-panel>
+  </mat-accordion>
+</mat-selection-list>

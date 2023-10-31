@@ -1,0 +1,16 @@
+<mat-form-field class="filter" subscriptSizing="dynamic">
+  <mat-label *ngIf="filter?.placeholder">{{ filter?.placeholder | translate }}</mat-label>
+  <input type="text" matInput [matAutocomplete]="auto" [formControl]="control">
+
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelectionChange($event)">
+    <mat-option *ngFor="let option of options | async" [value]="option?.value">
+      {{ option.value }}
+    </mat-option>
+  </mat-autocomplete>
+
+  <p-button matSuffix *ngIf="control.value" (click)="clearInput()" icon="bi bi-x-lg"
+    styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+
+  <p-button matSuffix *ngIf="!control.value" (click)="getData()" icon="bi bi-chevron-down"
+    styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+</mat-form-field>

@@ -1,0 +1,54 @@
+{
+  "site": {
+    "title": "Squares",
+    "subtitle": "Join the Squares game!"
+  },
+  "error": {
+    "required": "Il campo è obbligatorio",
+    "default": "Il valore inserito non è valido",
+    "email": "Il valore non è un indirizzo email valido",
+    "phone": "Il valore non è un numero di telefono valido",
+    "url":  "Il valore non è un indirizzo valido",
+    "fiscalCode": "Il valore non è un codice fiscale valido",
+    "minlength": "Il valore deve essere lungo minimo {{requiredLength}} caratteri",
+    "maxlength": "Il valore deve essere lungo massimo {{requiredLength}} caratteri",
+    "regex": "Il valore non è in un formato corretto",
+    "pattern": "Il valore inserito non è valido",
+    "max": "Il valore deve essere minore o uguale a {{max}}",
+    "min": "Il valore deve essere maggiore o uguale a {{min}}",
+    "matDatepickerParse": "La data inserita non è valida",
+    "matDatepickerMin": "Il valore deve essere maggiore o uguale a {{min}}",
+    "matDatepickerMax": "Il valore deve essere minore o uguale a {{max}}",
+    "confirmPassword": "La password e la password di conferma non corrispondono"
+  },
+  "message": {
+    "created": "Creazione completata",
+    "updated": "Modifica completata",
+    "saved": "Salvataggio completato",
+    "deleted": "Cancellazione completata",
+    "requestSent": "Richiesta inviata",
+    "sorted": "Ordinamento completato",
+    "saveFailed": "Salvataggio non riuscito",
+    "loginFailed": "Accesso non riuscito"
+  },
+  "action":{
+    "create": "Crea",
+    "apply": "Applica",
+    "update": "Modifica",
+    "delete": "Elimina",
+    "add": "Aggiungi",
+    "remove": "Rimuovi",
+    "details": "Visualizza",
+    "move": "Sposta",
+    "enable": "Abilita",
+    "disable": "Disabilita",
+    "sort": "Ordina",
+    "duplicate": "Duplica",
+    "cancel": "Annulla",
+    "updatePermissions": "Modifica permessi"
+  },
+  "deleteDialog": {
+    "title": "Elimina",
+    "message": "Confermi di voler eliminare questo elemento?"
+  }
+}

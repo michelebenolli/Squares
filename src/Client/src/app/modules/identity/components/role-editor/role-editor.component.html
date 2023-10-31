@@ -1,0 +1,12 @@
+<form *ngIf="form" [formGroup]="form">
+  <mat-form-field>
+    <mat-label>{{ 'Nome' | translate }}</mat-label>
+    <input matInput [placeholder]="'Nome del ruolo' | translate" formControlName="name" required />
+    <mat-error *ngIf="form.get('name')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>{{ 'Descrizione' | translate }}</mat-label>
+    <textarea matInput formControlName="description" [placeholder]="'Descrizione del ruolo' | translate"></textarea>
+  </mat-form-field>
+</form>

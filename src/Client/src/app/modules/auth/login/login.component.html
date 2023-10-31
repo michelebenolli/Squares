@@ -1,0 +1,29 @@
+<h2 class="mb-1">{{ 'Accedi' | translate }}</h2>
+<p class="mb-5">{{ 'Accedi al tuo account Squares' | translate }}</p>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+
+    <mat-form-field>
+      <mat-label>{{'Email' | translate }}</mat-label>
+      <input type="email" matInput formControlName="email" [placeholder]="'Email' | translate" required autocomplete="false">
+      <mat-error *ngIf="form.get('email')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>{{'Password' | translate }}</mat-label>
+      <input type="password" matInput formControlName="password" [placeholder]="'Password' | translate" required autocomplete="false">
+      <mat-error *ngIf="form.get('password')?.errors?.['required']">{{ 'error.required' | translate }}</mat-error>
+    </mat-form-field>
+
+    <button pButton pRipple type="submit" [label]="'ACCEDI' | translate" [loading]="loading" class="w-100 mb-3"></button>
+
+    <button pButton pRipple type="button" class="p-button-outlined d-block w-100" [matMenuTriggerFor]="help">
+      {{ 'Aiuto' | translate }}
+    </button>
+
+    <mat-menu #help>
+      <a routerLink="/forgot-password" mat-menu-item>{{ 'Password dimenticata?' | translate }}</a>
+      <a routerLink="/reconfirm-email" mat-menu-item>{{ 'Nuova conferma e-mail' | translate }}</a>
+    </mat-menu>
+</form>
+

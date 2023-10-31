@@ -1,0 +1,28 @@
+<div class="offcanvas-header">
+  <div class="d-flex justify-content-between align-items-center w-100">
+    <div class="flex-grow-1 text-truncate">
+      <h5 class="title">{{ config.title | translate }}</h5>
+      <p *ngIf="config.subtitle" class="subtitle">{{ config.subtitle | translate }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="offcanvas-body bg-light">
+  <div class="offcanvas-content">
+    <ng-container *ngIf="loading">
+      <p-skeleton *ngFor="let a of [].constructor(5)" styleClass="mb-4" height="3rem" />
+    </ng-container>
+    <ng-template appEditor [component]="component" [editor]="this" />
+  </div>
+</div>
+
+<div class="offcanvas-footer">
+  <div class="offcanvas-footer-content">
+    <button type="button" mat-stroked-button class="me-2" cOffcanvasToggle="OffcanvasEnd" (click)="offcanvas.dismiss()">
+      {{ 'Annulla' | translate }}
+    </button>
+    <button type="button" mat-flat-button color="primary" *ngIf="!config.hideButton" (click)="save()">
+      {{ 'Salva' | translate }}
+    </button>
+  </div>
+</div>

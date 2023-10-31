@@ -1,0 +1,28 @@
+<div *ngIf="items?.length" class="mb-2 field" (click)="openPicker()">
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item" *ngFor="let item of items; let i = index">
+      <div *ngIf="item" class="d-flex align-items-center">
+        <div class="flex-grow-1 lh-sm">
+          <p class="mb-0">{{ config.name(item) }}</p>
+          <small *ngIf="config.description" class="text-muted">{{ config.description(item) }}</small>
+        </div>
+        <p-button styleClass="p-button-rounded p-button-text p-button-secondary px-2 py-1" 
+          *ngIf="!disabled" (click)="remove(i); $event.stopPropagation()">
+          <i class="bi bi-x-lg"></i>
+        </p-button>
+      </div>
+    </li>
+  </ul>
+  <label>{{ label | translate }}</label>
+</div>
+
+<button pButton type="button" class="p-button-outlined p-button-secondary w-100 border-dashed"
+  *ngIf="!disabled && !items?.length" [class.btn-error]="hasError()" (click)="openPicker()">
+  {{ config.editor.title | translate }}
+</button>
+
+<mat-error class="mb-2">
+  <ng-container *ngIf="hasError() && control?.errors?.['required']">
+    {{ 'error.required' | translate }}
+  </ng-container>
+</mat-error>

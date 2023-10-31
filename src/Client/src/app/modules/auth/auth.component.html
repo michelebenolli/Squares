@@ -1,0 +1,16 @@
+<div class="container-fluid">
+    <div class="row vh-100">
+        <div class="col-lg-5 p-5 d-flex flex-column justify-content-center align-items-center">         
+            <div class="auth-container">
+                <img src="assets/images/logo.png" alt="logo" />
+                <router-outlet></router-outlet>
+            </div>
+        </div>
+        <div class="auth-background col-lg-7 d-none d-lg-flex flex-column align-items-center">
+            <div class="mt-auto mb-auto text-white">
+                <span class="d-block text-7xl font-semibold">{{ 'site.title' | translate }}</span>
+                <span class="d-block text-3xl">{{ 'site.subtitle' | translate }}</span>
+            </div>
+        </div>
+    </div>
+</div>

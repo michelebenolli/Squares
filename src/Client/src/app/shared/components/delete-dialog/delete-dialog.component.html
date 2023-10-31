@@ -1,0 +1,14 @@
+<div class="deleteDialog p-3">
+  <h3 mat-dialog-title>{{ 'deleteDialog.title' | translate }}</h3>
+  <mat-dialog-content>
+    {{ 'deleteDialog.message' | translate }}
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="me-2">
+    <button class="deleteBtn" mat-button mat-dialog-close>
+      {{ 'action.cancel' | translate }}
+    </button>
+    <button mat-button [mat-dialog-close]="true" cdkFocusInitial color="warn">
+      {{ 'action.delete' | translate }}
+    </button>
+  </mat-dialog-actions>
+</div>
