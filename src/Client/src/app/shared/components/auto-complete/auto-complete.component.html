@@ -1,5 +1,5 @@
 <mat-form-field class="filter" subscriptSizing="dynamic">
-  <mat-label *ngIf="filter?.placeholder">{{ filter?.placeholder | translate }}</mat-label>
+  <mat-label *ngIf="filter?.placeholder">{{ filter.placeholder ?? '' | translate }}</mat-label>
   <input type="text" matInput [matAutocomplete]="auto" [formControl]="control">
 
   <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelectionChange($event)">

@@ -23,7 +23,7 @@ export class TableComponent implements OnInit {
   @Input() actions?: TableAction<any>[];
   @Input() filters?: Filter[];
   @Input('pagedList') paging?: PagedList<any>;
-  @Input() set data(data: any[]) { this.setDataSource(data) }
+  @Input() set data(data: any[] | undefined) { this.setDataSource(data) }
   @Input() service: any;
   @Output() onSort: EventEmitter<Sort> = new EventEmitter<Sort>();
   @Output() onAction: EventEmitter<any> = new EventEmitter();

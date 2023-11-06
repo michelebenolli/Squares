@@ -36,7 +36,7 @@ export class FiltersComponent implements OnDestroy {
     this.applyFilter();
   }
 
-  dateChanged(event: any, name: string) {
+  dateChanged(event: any, name?: string) {
     if (!event.value) return;
     const filter = this.filters?.find(x => x.name === name);
     if (filter) filter.request.value = format(moment(event.value).toDate(), 'yyyy-MM-dd');
