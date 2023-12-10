@@ -1,0 +1,12 @@
+<ng-template 
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="target"
+    [cdkConnectedOverlayOpen]="isOpen" 
+    [cdkConnectedOverlayHasBackdrop]="dismissable"
+    cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop" 
+    (backdropClick)="hide()">
+
+    <div class="overlay" [ngStyle]="style">
+        <ng-content></ng-content>
+    </div>  
+</ng-template>

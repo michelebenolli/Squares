@@ -1,9 +1,6 @@
 namespace Squares.Application.Identity.Users.Requests;
 public class SearchUserRequest : PagedRequest, IRequest<PagedResponse<ApplicationUserDto>>
 {
-    public int? RoleId { get; set; }
-    public string? FullName { get; set; }
-    public bool? IsActive { get; set; }
 }
 
 public class SearchUserHandler : IRequestHandler<SearchUserRequest, PagedResponse<ApplicationUserDto>>

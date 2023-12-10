@@ -1,27 +1,28 @@
 using Ardalis.Specification.EntityFrameworkCore;
 using AutoMapper;
 using Finbuckle.MultiTenant;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using X.PagedList;
 using Squares.Application.Common.Caching;
 using Squares.Application.Common.Events;
 using Squares.Application.Common.Exceptions;
 using Squares.Application.Common.Interfaces;
 using Squares.Application.Common.Mailing;
 using Squares.Application.Common.Persistence;
-using Squares.Application.Identity.Users;
 using Squares.Application.Identity.Users.Requests;
+using Squares.Application.Identity.Users;
+using Squares.Application.Multitenancy;
 using Squares.Domain.Identity;
 using Squares.Infrastructure.Auth;
 using Squares.Infrastructure.Identity.Users;
 using Squares.Infrastructure.Persistence.Context;
 using Squares.Shared.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Options;
-using X.PagedList;
+using Squares.Application.Common.Models;
 
 namespace Squares.Infrastructure.Identity;
-
 internal partial class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -38,6 +39,7 @@ internal partial class UserService : IUserService
     private readonly ITenantInfo _currentTenant;
     private readonly IMapper _mapper;
     private readonly IRepository<Role> _roles;
+    private readonly ITenantService _tenantService;
 
     public UserService(
         UserManager<ApplicationUser> userManager,
@@ -53,7 +55,8 @@ internal partial class UserService : IUserService
         ITenantInfo currentTenant,
         IOptions<SecuritySettings> securitySettings,
         IMapper mapper,
-        IRepository<Role> roles)
+        IRepository<Role> roles,
+        ITenantService tenantService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
@@ -69,6 +72,7 @@ internal partial class UserService : IUserService
         _mapper = mapper;
         _securitySettings = securitySettings.Value;
         _roles = roles;
+        _tenantService = tenantService;
     }
 
     public async Task<ApplicationUserDto?> GetByIdAsync(int userId, CancellationToken token)
@@ -94,12 +98,14 @@ internal partial class UserService : IUserService
     {
         var query = _userManager.Users.WithSpecification(new SearchUserSpec(request));
 
-        if (request.RoleId != null)
+        int? roleId = request.GetFilter<int?>("@roleId");
+        if (roleId != null)
         {
             var roles = await _roles.ListAsync(token);
-            string? roleName = roles.FirstOrDefault(x => x.Id == request.RoleId)?.Name;
+            string? roleName = roles?.Find(x => x.Id == roleId)?.Name;
             var roleUsers = await _userManager.Users.WithSpecification(new SearchUserSpec(request)).ToList()
-                    .Where(x => _userManager.GetRolesAsync(x).Result.ToList().Any(x => x.ToLower() == roleName?.ToLower()))
+                    .Where(x => _userManager.GetRolesAsync(x).Result.ToList()
+                        .Any(x => x.ToLower() == roleName?.ToLower()))
                     .ToPagedListAsync(request.PageNumber, request.PageSize, token);
 
             return _mapper.Map<IPagedList<ApplicationUserDto>>(roleUsers);
@@ -172,5 +178,11 @@ internal partial class UserService : IUserService
         {
             throw new UnauthorizedException(_localizer["Tenant non valido"]);
         }
+    }
+
+    private async Task<TenantDto> GetTenant()
+    {
+        EnsureValidTenant();
+        return await _tenantService.GetByIdAsync(_currentTenant.Id!);
     }
 }

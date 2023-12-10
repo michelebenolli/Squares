@@ -42,6 +42,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MAT_MOMENT_DATE_ADAPTER_OPTIONS, MomentDateAdapter } from '@angular/material-moment-adapter';
 import { MatTableModule } from '@angular/material/table';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [],
@@ -81,7 +82,8 @@ import { MatTableModule } from '@angular/material/table';
     MatTooltipModule,
     MatPaginatorModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule,
+    OverlayModule
   ],
   exports: [
     MatAutocompleteModule,
@@ -119,7 +121,8 @@ import { MatTableModule } from '@angular/material/table';
     MatTooltipModule,
     MatPaginatorModule,
     MatSortModule,
-    MatTableModule
+    MatTableModule,
+    OverlayModule
   ],
   providers: [
     { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } },

@@ -1,6 +1,5 @@
 ﻿namespace Squares.Application.Multitenancy.Requests;
-
-public class GetTenantsRequest : IRequest<List<TenantDto>>
+public class GetTenantsRequest : BaseRequest, IRequest<List<TenantDto>>
 {
 }
 

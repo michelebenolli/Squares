@@ -4,20 +4,21 @@ import { Observable, of } from 'rxjs';
 import { PagedList } from '../models/paged-list';
 import { Patch } from '../models/patch';
 import { PagedRequest } from '../models/paged-request';
+import { BaseRequest } from '../models/base-request';
 
 @Injectable({ providedIn: 'root' })
-export abstract class RepositoryService<T, TId extends number | string = number> {
+export abstract class RepositoryService<T = any, TId extends number | string = number> {
 
   constructor(
     protected http: HttpClient,
     protected baseUrl: string) { }
 
-  getAll(params?: any): Observable<T[]> {
-    return this.http.get<T[]>(this.baseUrl, { params: params });
-  }
-
   search(request: PagedRequest): Observable<PagedList<T>> {
     return this.http.post<PagedList<T>>(this.baseUrl + 'search', request);
+  }
+
+  getAll(request?: BaseRequest): Observable<T[]> {
+    return this.http.post<T[]>(this.baseUrl + 'getAll', request ?? {});
   }
 
   getById(id: TId): Observable<T> {
@@ -51,7 +52,7 @@ export abstract class RepositoryService<T, TId extends number | string = number>
   }
 
   deleteMany(ids?: TId[]): Observable<void> {
-    return ids ? this.http.delete<void>(this.baseUrl, { body: { ids: ids }}) : of(void 0);
+    return ids ? this.http.delete<void>(this.baseUrl, { body: { ids: ids } }) : of(void 0);
   }
 
   sort(ids: number[]): Observable<void> {

@@ -47,6 +47,9 @@
     "cancel": "Annulla",
     "updatePermissions": "Modifica permessi"
   },
+  "filter" : {
+    "nameSearch": "Cerca per nome"
+  },
   "deleteDialog": {
     "title": "Elimina",
     "message": "Confermi di voler eliminare questo elemento?"

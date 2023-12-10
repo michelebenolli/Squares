@@ -5,24 +5,24 @@ using System.Text;
 using Squares.Application.Identity.Account.Requests;
 
 namespace Squares.Infrastructure.Identity;
-
 internal partial class UserService
 {
-    public async Task ForgotPasswordAsync(ForgotPasswordRequest request, string origin)
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
     {
-        EnsureValidTenant();
-
         var user = await _userManager.FindByEmailAsync(request.Email.Normalize());
         if (user != null && await _userManager.IsEmailConfirmedAsync(user))
         {
-            await SendPasswordResetEmailAsync(user, origin);
+            await SendPasswordResetEmailAsync(user);
         }
     }
 
     public async Task ResetPasswordAsync(ResetPasswordRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email.Normalize());
-        if (user == null) return;
+        if (user == null)
+        {
+            return;
+        }
 
         request.Token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
         var result = await _userManager.ResetPasswordAsync(user, request.Token, request.Password);
@@ -49,9 +49,9 @@ internal partial class UserService
         }
     }
 
-    private async Task SendPasswordResetEmailAsync(ApplicationUser user, string origin)
+    private async Task SendPasswordResetEmailAsync(ApplicationUser user)
     {
-        string uri = await GetPasswordResetUriAsync(user, origin);
+        string uri = await GetPasswordResetUriAsync(user);
 
         var email = new EmailModel()
         {
@@ -60,10 +60,11 @@ internal partial class UserService
             ButtonText = _localizer["Reset password"],
             ButtonLink = uri
         };
+
         var mailRequest = new MailRequest(
             new List<string> { user.Email! },
             _localizer["Reset password"],
-            _templateService.GenerateEmailTemplate("identity", email));
+        _templateService.GenerateEmailTemplate("identity", email));
 
         _jobService.Enqueue(() => _mailService.SendAsync(mailRequest, CancellationToken.None));
     }

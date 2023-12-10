@@ -1,12 +1,9 @@
-﻿using Amazon.Runtime.Internal.Util;
-using Squares.Application.Common.Caching;
+﻿using Squares.Application.Common.Caching;
 using Squares.Application.Common.Exceptions;
 using Squares.Shared.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Squares.Infrastructure.Identity;
-
 internal partial class UserService
 {
     public async Task<List<string>> GetPermissionsAsync(int userId, CancellationToken token)
@@ -29,6 +26,7 @@ internal partial class UserService
         return permissions.Distinct().ToList();
     }
 
+    // TODO: Remove?
     // TODO: Complete, get the permissions and call it from the controller.
     public async Task<List<string>> GetPermissionsAsync(int userId)
     {
@@ -48,7 +46,8 @@ internal partial class UserService
     {
         var permissions = await _cache.GetOrSetAsync(
             _cacheKeys.GetCacheKey(AppClaims.Permission, userId),
-            () => GetPermissionsAsync(userId, token));
+            () => GetPermissionsAsync(userId, token),
+            token: token);
 
         return permissions?.Contains(permission) ?? false;
     }

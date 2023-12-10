@@ -22,7 +22,7 @@
 </button>
 
 <mat-error class="mb-2">
-  <ng-container *ngIf="hasError() && control?.errors?.['required']">
+  <ng-container *ngIf="hasError('required')">
     {{ 'error.required' | translate }}
   </ng-container>
 </mat-error>

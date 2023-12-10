@@ -1,31 +1,38 @@
-<div *ngIf="filters" class="filters d-flex">
-  <ng-container *ngFor="let filter of filters" [ngSwitch]="filter.type">
+<div *ngIf="hasFilters || hasOverlayFilters" class="d-flex align-items-center w-100">
 
-    <!-- Text filter -->
-    <mat-form-field class="filter" *ngSwitchCase="filterType.Text" subscriptSizing="dynamic">
-      <mat-label *ngIf="filter.placeholder">{{ filter.placeholder | translate }}</mat-label>
-      <input matInput type="text" [(ngModel)]="filter.request.value" (ngModelChange)="onInputChange()">
-
-      <p-button matSuffix *ngIf="filter.request?.value" (click)="clearInput(filter)" icon="bi bi-x-lg"
-        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
-    </mat-form-field>
-
-    <!-- Autocomplete filter -->
-    <ng-container *ngSwitchCase="filterType.Autocomplete">
-      <app-auto-complete class="filter" [filter]="filter" (valueChange)="valueChange($event)" />
+  <div class="filters" *ngIf="hasFilters">
+    <ng-container *ngFor="let filter of filters">
+      <ng-container *ngIf="!filter.overlay">
+        <ng-container *ngTemplateOutlet="filterTemplate; context:{filter}" />
+      </ng-container>
     </ng-container>
+  </div>
 
-    <!-- Single Date filter -->
-    <mat-form-field *ngSwitchCase="filterType.Date" subscriptSizing="dynamic">
-      <mat-label>{{ 'filter.placeholder' | translate }}</mat-label>
-      <input matInput [matDatepicker]="picker" placeholder="Seleziona una data" [value]="filter.request.value"
-        (dateChange)="dateChanged($event, filter.name)">
+  <ng-container *ngIf="hasOverlayFilters">
+    <app-overlay [style]="{ 'min-width': '350px' }">
+      <p class="font-semibold">{{ 'Filtri' | translate }}</p>
+      <div class="panel-filters">
+        <ng-container *ngFor="let filter of filters">
+          <ng-container *ngIf="filter.overlay">
+            <ng-container *ngTemplateOutlet="filterTemplate; context:{filter}" />
+          </ng-container>
+        </ng-container>
+      </div>
+      <div class="d-flex justify-content-end">
+        <p-button [label]="'Cancella filtri' | translate" styleClass="p-button-text me-2" (click)="clear()" />
+        <p-button [label]="'Applica' | translate" styleClass="p-button-primary" (click)="apply()" />
+      </div>
+    </app-overlay>
 
-      <p-button matSuffix *ngIf="filter.request?.value" (click)="clearInput(filter)" icon="bi bi-x-lg"
-        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
-
-      <mat-datepicker-toggle *ngIf="!filter.request?.value" matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
+    <p-button icon="bi bi-funnel" styleClass="p-button-primary {{ hasFilters ? 'ms-3' : '' }}" 
+      cdkOverlayOrigin #origin="cdkOverlayOrigin" (click)="overlay.toggle(origin)" />
   </ng-container>
 </div>
+
+<ng-template #filterTemplate let-filter="filter">
+  <div [ngSwitch]="filter.type" class="filter" *ngIf="filter.type !== FilterType.Hidden">
+    <app-text-filter *ngSwitchCase="FilterType.Text" [filter]="filter" (changed)="apply(filter)" />
+    <app-select-filter *ngSwitchCase="FilterType.Select" [filter]="filter" (changed)="apply(filter)" />
+    <app-date-filter *ngSwitchCase="FilterType.Date" [filter]="filter" (changed)="apply(filter)" />
+  </div>
+</ng-template>

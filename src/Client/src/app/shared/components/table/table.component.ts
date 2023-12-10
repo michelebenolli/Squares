@@ -7,7 +7,7 @@ import { SortEvent } from 'primeng/api';
 import { Sort } from '@angular/material/sort';
 import { PagedRequest } from '../../models/paged-request';
 import { FilterRequest } from '../../models/filter-request';
-import { setFilters } from '../../other/utils';
+import { hasValue } from '../../other/utils';
 import { PagedList } from '../../models/paged-list';
 import { TableAction } from './models/table-action';
 import { Action } from '../actions/models/action';
@@ -51,7 +51,7 @@ export class TableComponent implements OnInit {
 
     this.columnNames = this.columns.map(x => x.name);
     if (this.rowActions) this.columnNames.push('row-actions');
-    setFilters(this.params, this.filters?.map(x => x.request));
+    this.params.filters = this.filters?.map(x => x.request)?.filter(x => hasValue(x));
   }
 
   getItems() {
@@ -98,10 +98,10 @@ export class TableComponent implements OnInit {
   filter(requests: FilterRequest[]) {
     this.params = { 
       pageNumber: 1, 
-      pageSize: this.params.pageSize, 
-      orderBy: this.params.orderBy 
+      pageSize: this.params.pageSize,
+      filters: requests.filter(x => hasValue(x)),
+      orderBy: this.params.orderBy
     };
-    setFilters(this.params, requests);
 
     if (this.service) this.getItems();
     this.onFilter.emit(this.params);

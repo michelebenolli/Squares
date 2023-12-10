@@ -11,9 +11,8 @@ export const userPickerConfig: PickerConfiguration<User> = {
   editor: { title: 'Seleziona un utente' },
   filters: [{
     type: FilterType.Text,
-    name: 'search',
-    placeholder: 'Cerca un utente',
-    request: { specificField: 'fullName' }
+    label: 'Cerca un utente',
+    request: { field: '@fullName' }
   }]
 };
 

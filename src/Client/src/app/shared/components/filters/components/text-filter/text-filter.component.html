@@ -1,0 +1,6 @@
+<mat-form-field class="w-100" subscriptSizing="dynamic">
+    <mat-label *ngIf="filter.label">{{ filter.label | translate }}</mat-label>
+    <input matInput type="text" [(ngModel)]="value" (ngModelChange)="onInput()">
+    <p-button matSuffix *ngIf="filter.request?.value" (click)="clear()" icon="bi bi-x-lg"
+        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+</mat-form-field>

@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { Entity } from 'src/app/shared/models/entity';
 import { PickerConfiguration } from '../picker-configuration';
 import { PickerService } from '../picker.service';
-import { Entity } from 'src/app/shared/models/entity';
 
 @Component({
   selector: 'app-picker',
@@ -19,7 +19,7 @@ export class PickerComponent<T extends Entity> implements OnChanges {
   @Output() change = new EventEmitter<number | number[] | undefined>();
   items!: T[];
 
-  constructor(public pickerService: PickerService<T>) {  }
+  constructor(public pickerService: PickerService) { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
@@ -47,8 +47,9 @@ export class PickerComponent<T extends Entity> implements OnChanges {
     this.change.emit(value);
   }
 
-  hasError(): boolean {
-    return !!this.control?.hasError && !!this.control?.touched;
+  hasError(name?: string): boolean {
+    const hasError = name ? this.control?.hasError(name) : this.control?.invalid;
+    return !!hasError && !!this.control?.touched;
   }
 
   setValue = (x: T | T[]) => Array.isArray(x) ? x : x ? [x] : [];

@@ -1,7 +1,7 @@
-import { EditorConfig } from "src/app/shared/components/editor/models/editor-config";
-import { Filter } from "src/app/shared/components/filters/models/filter";
+import { EditorConfig } from "../editor/models/editor-config";
+import { Filter } from "../filters/models/filter";
 
-export interface PickerConfiguration<T> {
+export interface PickerConfiguration<T = any> {
   service: any;
   editor: EditorConfig;
   name: (x: T) => string;

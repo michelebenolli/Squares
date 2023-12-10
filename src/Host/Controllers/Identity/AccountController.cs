@@ -43,7 +43,7 @@ public class AccountController : VersionNeutralApiController
     [ApiConventionMethod(typeof(ApiConventions), nameof(ApiConventions.Register))]
     public Task ForgotPasswordAsync(ForgotPasswordRequest request)
     {
-        return _userService.ForgotPasswordAsync(request, GetOrigin());
+        return _userService.ForgotPasswordAsync(request);
     }
 
     [HttpPost("reconfirm-email")]
@@ -53,7 +53,7 @@ public class AccountController : VersionNeutralApiController
     [ApiConventionMethod(typeof(ApiConventions), nameof(ApiConventions.Register))]
     public Task ReconfirmEmailAsync(ConfirmEmailRequest request)
     {
-        return _userService.ReconfirmEmailAsync(request, GetOrigin());
+        return _userService.ReconfirmEmailAsync(request);
     }
 
     [HttpPost("reset-password")]
@@ -87,6 +87,4 @@ public class AccountController : VersionNeutralApiController
         await _userService.ChangePasswordAsync(request, userId);
         return Ok();
     }
-
-    private string GetOrigin() => $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
 }

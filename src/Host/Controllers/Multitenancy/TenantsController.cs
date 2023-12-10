@@ -5,12 +5,12 @@ namespace Squares.Host.Controllers.Multitenancy;
 
 public class TenantsController : VersionNeutralApiController
 {
-    [HttpGet]
+    [HttpPost("getAll")]
     [Permission(AppAction.View, AppResource.Tenants)]
     [OpenApiOperation("Get a list of all tenants", "")]
-    public Task<List<TenantDto>> GetListAsync()
+    public Task<List<TenantDto>> GetListAsync(GetTenantsRequest request)
     {
-        return Mediator.Send(new GetTenantsRequest());
+        return Mediator.Send(request);
     }
 
     [HttpGet("{id}")]

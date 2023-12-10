@@ -10,6 +10,7 @@
   width: 100%;
   box-sizing: border-box;
   height: 70px;
+  padding-right: 0;
 }
 
 .offcanvas-body {
@@ -54,6 +55,13 @@
   margin-bottom: 0;
 }
 
+:host::ng-deep {
+  .p-menuitem-link {
+    padding: 0 !important;
+    height: 70px !important;
+  }
+}
+
 ::ng-deep {
   .myoffcanvas-small {
     --bs-offcanvas-width: 500px;
@@ -67,4 +75,22 @@
     --bs-offcanvas-width: 1500px;
     max-width: 100%;
   }
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  padding-top: 1rem;
+  min-width: 70px;
+}
+
+.tab-icon {
+  display: block;
+  font-size: 18px;
+}
+
+.tab-text {
+  font-size: 12px;
 }

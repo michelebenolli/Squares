@@ -1,5 +1,6 @@
 .filters {
   width: 100%;
+  display: flex;
 
   .filter {
     width: 100%;
@@ -7,5 +8,11 @@
     &:last-child {
       margin-right: 0;
     }
+  }
+}
+
+.panel-filters {
+  .filter {
+    margin-bottom: 1rem;
   }
 }

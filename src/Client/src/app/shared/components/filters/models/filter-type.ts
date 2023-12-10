@@ -1,6 +1,6 @@
 export enum FilterType {
   Text,
-  Autocomplete,
+  Select,
   Date,
   Hidden
 }

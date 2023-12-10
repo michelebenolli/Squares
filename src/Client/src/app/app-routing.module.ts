@@ -14,9 +14,9 @@ const routes: Routes = [
         component: AppLayoutComponent,
         canActivate: [AuthGuard],
         children: [
-            { path: '', redirectTo: '/games', pathMatch: 'full' },
-            { path: 'games', data: { breadcrumb: 'Partite' }, loadChildren: () => import('./modules/game/game.module').then(m => m.GameModule) },
-            { path: 'identity', data: { breadcrumb: 'Admin' }, loadChildren: () => import('./modules/identity/identity.module').then(m => m.IdentityModule) }
+            { path: '', redirectTo: '/games', pathMatch: 'full', data: { breadcrumb: { skip: true } } },
+            { path: 'games', data: { breadcrumb: { label: 'Partite' } }, loadChildren: () => import('./modules/game/game.module').then(m => m.GameModule) },
+            { path: 'identity', data: { breadcrumb: { skip: true } }, loadChildren: () => import('./modules/identity/identity.module').then(m => m.IdentityModule) }
         ]
     },
     { path: '', loadChildren: () => import('./modules/auth/auth.module').then(m => m.AuthModule) },

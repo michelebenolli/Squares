@@ -1,5 +1,5 @@
-import { NgModule } from '@angular/core';
-import { LocationStrategy, PathLocationStrategy } from '@angular/common';
+import { LOCALE_ID, NgModule } from '@angular/core';
+import { LocationStrategy, PathLocationStrategy, registerLocaleData } from '@angular/common';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AppLayoutModule } from './layout/app.layout.module';
@@ -13,6 +13,9 @@ import { ErrorInterceptor } from './shared/interceptors/error.interceptor';
 import { JwtInterceptor } from './shared/interceptors/jwt.interceptor';
 import { AuthGuard } from './shared/guards/auth.guard';
 import { PermissionGuard } from './shared/guards/permission.guard';
+import localeIt from '@angular/common/locales/it';
+
+registerLocaleData(localeIt);
 
 export function HttpLoaderFactory(http: HttpBackend) {
     return new TranslateHttpLoader(new HttpClient(http));
@@ -42,6 +45,7 @@ export function HttpLoaderFactory(http: HttpBackend) {
         { provide: LocationStrategy, useClass: PathLocationStrategy },
         AuthGuard,
         PermissionGuard,
+        { provide: LOCALE_ID, useValue: 'it-IT' },
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     ],

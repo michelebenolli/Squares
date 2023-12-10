@@ -21,6 +21,6 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, int>
 
     public async Task<int> Handle(CreateUserRequest request, CancellationToken _)
     {
-        return await _userService.CreateAsync(request, request.Origin!);
+        return await _userService.CreateAsync(request);
     }
 }

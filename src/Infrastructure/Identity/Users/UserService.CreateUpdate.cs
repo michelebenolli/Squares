@@ -1,16 +1,14 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
+﻿using Squares.Application.Common.Exceptions;
+using Squares.Application.Identity.Users.Requests;
+using Squares.Domain.Identity;
+using Squares.Shared.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
-using Squares.Application.Common.Exceptions;
-using Squares.Application.Common.Mailing;
-using Squares.Application.Identity.Users.Requests;
-using Squares.Domain.Common;
-using Squares.Domain.Identity;
-using Squares.Shared.Authorization;
 using System.Security.Claims;
 
 namespace Squares.Infrastructure.Identity;
+
 internal partial class UserService
 {
     public async Task<int> GetOrCreateFromPrincipalAsync(ClaimsPrincipal principal)
@@ -95,7 +93,7 @@ internal partial class UserService
         return !result.Succeeded ? throw new InternalServerException(_localizer["Si è verificato un errore"]) : user;
     }
 
-    public async Task<int> CreateAsync(CreateUserRequest request, string origin)
+    public async Task<int> CreateAsync(CreateUserRequest request)
     {
         var user = _mapper.Map<ApplicationUser>(request);
         user.UserName = Guid.NewGuid().ToString();
@@ -115,7 +113,7 @@ internal partial class UserService
             }
         }
 
-        await SendInvitationEmailAsync(user, origin);
+        await SendInvitationEmailAsync(user);
         await _events.PublishAsync(new ApplicationUserCreatedEvent(user.Id));
         return user.Id;
     }
@@ -178,7 +176,7 @@ internal partial class UserService
         }
     }
 
-    public async Task<int> RegisterAsync(RegisterUserRequest request, string origin)
+    public async Task<int> RegisterAsync(RegisterUserRequest request)
     {
         var user = _mapper.Map<ApplicationUser>(request);
 
@@ -186,7 +184,7 @@ internal partial class UserService
         user.UserName = userName;
         user.User.UserName = userName;
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        var result = await _userManager.CreateAsync(user);
         if (!result.Succeeded)
         {
             throw new InternalServerException(_localizer["Operazione non riuscita"]);
@@ -196,7 +194,7 @@ internal partial class UserService
 
         if (_securitySettings.RequireConfirmedAccount && !string.IsNullOrEmpty(user.Email))
         {
-            await SendInvitationEmailAsync(user, origin);
+            await SendInvitationEmailAsync(user);
         }
 
         await _events.PublishAsync(new ApplicationUserCreatedEvent(user.Id));

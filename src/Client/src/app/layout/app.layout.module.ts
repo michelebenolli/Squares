@@ -18,23 +18,24 @@ import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
 import { StyleClassModule } from 'primeng/styleclass';
 import { AppLayoutComponent } from './app.layout.component';
-import { AppBreadcrumbComponent } from './app.breadcrumb.component';
 import { AppSidebarComponent } from './app.sidebar.component';
 import { AppTopbarComponent } from './app.topbar.component';
 import { AppMenuComponent } from './app.menu.component';
 import { AppMenuitemComponent } from './app.menuitem.component';
 import { AppFooterComponent } from './app.footer.component';
 import { SharedModule } from '../shared/shared.module';
+import { LoaderComponent } from './loader/loader.component';
+import { BreadcrumbModule } from 'xng-breadcrumb';
 
 @NgModule({
     declarations: [
         AppLayoutComponent,
-        AppBreadcrumbComponent,
         AppSidebarComponent,
         AppTopbarComponent,
         AppMenuComponent,
         AppMenuitemComponent,
-        AppFooterComponent
+        AppFooterComponent,
+        LoaderComponent
     ],
     imports: [
         BrowserModule,
@@ -46,6 +47,7 @@ import { SharedModule } from '../shared/shared.module';
         BadgeModule,
         RadioButtonModule,
         InputSwitchModule,
+        BreadcrumbModule,
         ButtonModule,
         TooltipModule,
         RippleModule,

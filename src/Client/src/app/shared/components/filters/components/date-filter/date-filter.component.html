@@ -1,0 +1,9 @@
+<mat-form-field class="w-100" subscriptSizing="dynamic">
+    <mat-label>{{ filter.label | translate }}</mat-label>
+    <input matInput [matDatepicker]="picker" [value]="filter.request.value" (dateChange)="onChange($event)">
+    <p-button matSuffix *ngIf="filter.request?.value" (click)="clear(filter)" icon="bi bi-x-lg"
+        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+    <p-button matSuffix *ngIf="!filter.request?.value" (click)="picker.open()" icon="bi bi-calendar"
+        styleClass="p-button-rounded p-button-text p-button-secondary me-1" />
+    <mat-datepicker #picker />
+</mat-form-field>

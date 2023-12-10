@@ -4,5 +4,4 @@ export interface FilterRequest {
   filters?: FilterRequest[];
   field?: string;
   value?: any;
-  specificField?: string
 }

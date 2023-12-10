@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { TableAction } from '../table/models/table-action';
 import { MenuItem } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { Action } from './models/action';
 
 @Component({
   selector: 'app-actions',
@@ -12,7 +12,7 @@ import { Action } from './models/action';
 export class ActionsComponent<T = any> implements OnInit {
   
   @Input() emitter!: EventEmitter<any>;
-  @Input() actions?: Action<any>[];
+  @Input() actions?: TableAction<any>[];
   @Input() item?: T | T[];
   @Input() type: 'button' | 'icon' = 'icon';
   menuItems?: MenuItem[];
@@ -25,7 +25,7 @@ export class ActionsComponent<T = any> implements OnInit {
     this.getMenuItems();
   }
 
-  openAction(item: any, action: Action<any>) {
+  openAction(item: any, action: TableAction<any>) {
     if (action.action) {
       const event = { action: action.action.name, data: item };
       if (action.dialog) {

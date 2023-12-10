@@ -1,36 +1,40 @@
-import { NgbActiveOffcanvas } from '@ng-bootstrap/ng-bootstrap';
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, Inject, Injector, OnInit } from '@angular/core';
 import { PickerConfiguration } from '../picker-configuration';
-import { SelectionModel } from '@angular/cdk/collections';
-import { PageEvent } from '@angular/material/paginator';
-import { Entity } from 'src/app/shared/models/entity';
-import { FilterRequest } from 'src/app/shared/models/filter-request';
 import { PagedList } from 'src/app/shared/models/paged-list';
+import { SelectionModel } from '@angular/cdk/collections';
 import { PagedRequest } from 'src/app/shared/models/paged-request';
-import { getRequest } from 'src/app/shared/other/utils';
+import { Entity } from 'src/app/shared/models/entity';
+import { getRequest } from '../../../other/utils';
+import { EDITOR, EditorComponent } from '../../editor/editor.component';
+import { PageEvent } from '@angular/material/paginator';
+import { FilterRequest } from 'src/app/shared/models/filter-request';
 
 @Component({
   selector: 'app-picker-editor',
   templateUrl: './picker-editor.component.html',
   styleUrls: ['./picker-editor.component.scss']
 })
-export class PickerEditorComponent<T extends Entity> implements OnInit {
+export class PickerEditorComponent<T extends Entity> implements OnInit{
 
-  @Input() config!: PickerConfiguration<T>;
-  @Input() data?: T[];
-  @Output() selected = new EventEmitter<T[]>();
-
+  config!: PickerConfiguration<T>;
   service?: any;
   items?: PagedList<T>;
-  params: PagedRequest = { pageNumber: 1, pageSize: 10 };
+  params!: PagedRequest;
   selection!: SelectionModel<T>;
 
-  constructor(public offcanvas: NgbActiveOffcanvas) { }
+  constructor(
+    @Inject(EDITOR) public editor: EditorComponent,
+    private injector: Injector) { }
 
   ngOnInit(): void {
-    this.selection = new SelectionModel<T>(true, this.config.multiple ? this.data : []);
+    const data = this.editor.config.data;
+    this.config = data.config;
+    this.service = this.injector.get<any>(data.config.service);
+    this.editor.onSave.subscribe(() => this.save());
+
+    this.selection = new SelectionModel<T>(true, this.config.multiple ? data.items : []);
     this.selection.isSelected = this.isChecked.bind(this);
-    if (this.config?.filters) this.params = getRequest(this.config?.filters)
+    this.params = getRequest(this.config?.filters);
     this.getData();
   }
 
@@ -48,8 +52,7 @@ export class PickerEditorComponent<T extends Entity> implements OnInit {
   }
 
   save() {
-    this.selected.emit(this.selection.selected);
-    this.offcanvas.close();
+    this.editor.close(this.selection.selected);
   }
 
   isChecked(item: T): boolean {
@@ -62,20 +65,8 @@ export class PickerEditorComponent<T extends Entity> implements OnInit {
   }
 
   filter(filters: FilterRequest[]) {
-    const filter = filters.find(x => x.specificField);
-    if (filter?.specificField) {
-      const { specificField, value } = filter;
-      this.params = { pageNumber: 1, pageSize: 10, [specificField]: value }
-      filters = filters.filter(x => !x.specificField);
-    }
-
     this.params.filters = filters;
     this.params.pageNumber = 1;
     this.getData();
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
-    if (event.key === 'Enter') this.save();
   }
 }

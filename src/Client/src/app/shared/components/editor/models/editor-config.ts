@@ -4,7 +4,7 @@ export interface EditorConfig<T = any> {
   title: string;
   subtitle?: string;
   size?: EditorSize;
-  hideButton?: boolean;
   id?: number;
   data?: T;
+  activeTab?: string;
 }

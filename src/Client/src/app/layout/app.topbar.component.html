@@ -5,7 +5,13 @@
         </a>
         <img class="horizontal-logo" [routerLink]="['/']" [src]="'assets/images/logo.png'" alt="logo"/>
         <span class="topbar-separator"></span>
-        <app-breadcrumb></app-breadcrumb>
+    
+        <xng-breadcrumb separator="/" class="layout-breadcrumb">
+            <ng-container *xngBreadcrumbItem="let breadcrumb">
+                <ng-container>{{ breadcrumb }}</ng-container>
+            </ng-container>
+        </xng-breadcrumb>
+
         <img class="mobile-logo" [src]="'assets/images/logo.png'" alt="logo"/>
     </div>
 
@@ -17,10 +23,11 @@
     <div class="topbar-right">
         <ul class="topbar-menu">
             <li class="profile-item static sm:relative p-0 border-0">
-                <a tabindex="0" pStyleClass="@next" enterClass="hidden" enterActiveClass="scalein" leaveToClass="hidden" leaveActiveClass="fadeout" [hideOnOutsideClick]="true">
+                <a tabindex="0" pStyleClass="@next" enterClass="hidden" enterActiveClass="scalein" leaveToClass="hidden" 
+                    leaveActiveClass="fadeout" [hideOnOutsideClick]="true">
                     <ng-container *ngIf="user">
                         <img src="assets/images/user.png" alt="user" class="profile-image"/>
-                        <span class="profile-name">{{ user.firstName + ' ' + user.lastName }}</span>
+                        <span class="profile-name">{{ user.lastName + ' ' + user.firstName }}</span>
                     </ng-container>                    
                 </a>
                 <ul class="list-none p-3 m-0 border-round shadow-2 absolute surface-overlay hidden origin-top w-full sm:w-12rem mt-2 right-0  z-5 top-auto">

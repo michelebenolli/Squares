@@ -3,9 +3,9 @@
 @include mat-core();
 
 $mat-primary: (
-  main: #3c4b64,
-  lighter: #c5c9d1,
-  darker: #273348,
+  main: var(--primary-500),
+  lighter: var(--primary-200),
+  darker: var(--primary-800),
   contrast : (
     main: $light-primary-text,
     lighter: $dark-primary-text,
@@ -15,9 +15,9 @@ $mat-primary: (
 $theme-primary: mat.define-palette($mat-primary, main, lighter, darker);
 
 $mat-accent: (
-  main: #797979,
-  lighter: #d7d7d7,
-  darker: #5c5c5c,
+  main: var(--surface-500),
+  lighter: var(--surface-200),
+  darker: var(--surface-800),
   contrast : (
     main: $light-primary-text,
     lighter: $dark-primary-text,
@@ -27,9 +27,9 @@ $mat-accent: (
 $theme-accent: mat.define-palette($mat-accent, main, lighter, darker);
 
 $mat-warn: (
-  main: #e9545b,
-  lighter: #f8ccce,
-  darker: #df3a40,
+  main: var(--red-500),
+  lighter: var(--red-200),
+  darker: var(--red-800),
   contrast : (
     main: $dark-primary-text,
     lighter: $dark-primary-text,
@@ -65,5 +65,5 @@ $custom-theme: mat-light-theme((
 ));
 @include angular-material-typography($custom-typography);
 @include angular-material-theme($custom-theme);
-@include mat.form-field-density(-3);
+@include mat.form-field-density(-4);
 @include mat.toolbar-density(-2);

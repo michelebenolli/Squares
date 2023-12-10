@@ -25,20 +25,18 @@ internal partial class UserService
         throw new InternalServerException(_localizer["Si è verificato un errore"]);
     }
 
-    public async Task ReconfirmEmailAsync(ConfirmEmailRequest request, string origin)
+    public async Task ReconfirmEmailAsync(ConfirmEmailRequest request)
     {
-        EnsureValidTenant();
-
         var user = await _userManager.FindByEmailAsync(request.Email.Normalize());
         if (user != null && !await _userManager.IsEmailConfirmedAsync(user))
         {
-            await SendInvitationEmailAsync(user, origin);
+            await SendInvitationEmailAsync(user);
         }
     }
 
-    private async Task SendInvitationEmailAsync(ApplicationUser user, string origin)
+    private async Task SendInvitationEmailAsync(ApplicationUser user)
     {
-        string uri = await GetPasswordResetUriAsync(user, origin);
+        string uri = await GetPasswordResetUriAsync(user);
 
         var email = new EmailModel()
         {
@@ -57,9 +55,10 @@ internal partial class UserService
         _jobService.Enqueue(() => _mailService.SendAsync(mailRequest, CancellationToken.None));
     }
 
-    private async Task<string> GetPasswordResetUriAsync(ApplicationUser user, string origin)
+    private async Task<string> GetPasswordResetUriAsync(ApplicationUser user)
     {
-        string uri = new Uri($"{origin}/reset-password/").ToString();
+        var tenant = await GetTenant();
+        string uri = new Uri($"{tenant.Domain}/reset-password/").ToString();
         string token = await _userManager.GeneratePasswordResetTokenAsync(user);
         token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 

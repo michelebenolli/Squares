@@ -14,12 +14,12 @@ public class UsersController : VersionNeutralApiController
         return Mediator.Send(request);
     }
 
-    [HttpGet]
+    [HttpPost("getAll")]
     [Permission(AppAction.View, AppResource.Users)]
     [OpenApiOperation("Get list of all users", "")]
-    public Task<List<ApplicationUserDto>> GetListAsync()
+    public Task<List<ApplicationUserDto>> GetListAsync(GetUsersRequest request)
     {
-        return Mediator.Send(new GetUsersRequest());
+        return Mediator.Send(request);
     }
 
     [HttpGet("{id}")]
@@ -35,18 +35,6 @@ public class UsersController : VersionNeutralApiController
     [OpenApiOperation("Create a new user", "")]
     public Task<int> CreateAsync(CreateUserRequest request)
     {
-        request.Origin = GetOrigin();
-        return Mediator.Send(request);
-    }
-
-    [HttpPost("register")]
-    [TenantIdHeader]
-    [AllowAnonymous]
-    [OpenApiOperation("Anonymous user creates a user", "")]
-    [ApiConventionMethod(typeof(ApiConventions), nameof(ApiConventions.Register))]
-    public Task<int> RegisterAsync(RegisterUserRequest request)
-    {
-        request.Origin = GetOrigin();
         return Mediator.Send(request);
     }
 
@@ -94,6 +82,4 @@ public class UsersController : VersionNeutralApiController
         await Mediator.Send(request);
         return Ok();
     }
-
-    private string GetOrigin() => $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
 }

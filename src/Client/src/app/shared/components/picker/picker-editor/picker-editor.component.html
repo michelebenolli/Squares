@@ -1,54 +1,23 @@
-<div class="offcanvas-header">
-  <div class="d-flex justify-content-between align-items-center w-100">
-    <div class="flex-grow-1 text-truncate">
-      <h5 class="title">{{ config.editor.title | translate }}</h5>
-      <p *ngIf="config.editor.subtitle" class="subtitle">{{ config.editor.subtitle | translate }}</p>
-    </div>
-    <div class="d-flex"></div>
-  </div>
-</div>
+<!-- Filters -->
+<app-filters *ngIf="config.filters" [filters]="config.filters" (onFilter)="filter($event)" />
 
-<div class="offcanvas-body bg-light">
-  <div class="offcanvas-content">
-    <!-- Filters -->
-    <app-filters *ngIf="config.filters"
-      [filters]="config.filters" (onFilter)="filter($event)" />
+<!-- Selection list -->
+<mat-selection-list #picker class="mt-2" *ngIf="items?.data?.length; else noItems" 
+    [multiple]="config.multiple" [hideSingleSelectionIndicator]="true">
 
-    <!-- Selection list -->
-    <mat-selection-list #picker class="mt-2"
-      *ngIf="items?.data?.length; else noItems"
-      [multiple]="config.multiple"
-      [hideSingleSelectionIndicator]="true">
-
-      <mat-list-option *ngFor="let item of items?.data" class="list-item"
-        [value]="item['id']" [selected]="selection.isSelected(item)"
-        (click)="toggle(item)">
-
+    <mat-list-option *ngFor="let item of items?.data" class="list-item" [value]="item['id']"
+        [selected]="selection.isSelected(item)" (click)="toggle(item)">
         <span matListItemTitle>{{ config.name(item) }}</span>
         <span matListItemLine *ngIf="config.description">{{ config.description(item) }}</span>
-      </mat-list-option>
-    </mat-selection-list>
+    </mat-list-option>
+</mat-selection-list>
 
-    <ng-template #noItems>
-      <div class="border rounded p-3 mt-3">
+<ng-template #noItems>
+    <div class="border rounded p-3 mt-3">
         {{ 'Nessun elemento da visualizzare' | translate }}
-      </div>
-    </ng-template>
+    </div>
+</ng-template>
 
-    <!-- Pagination -->
-    <mat-paginator *ngIf="items && items.totalCount > items.pageSize"
-      [length]="items.totalCount" [pageSize]="items.pageSize" [hidePageSize]="true"
-      (page)="onPageChange($event)" showFirstLastButtons />
-  </div>
-</div>
-
-<div class="offcanvas-footer">
-  <div class="offcanvas-footer-content">
-    <button type="button" mat-stroked-button class="me-2" cOffcanvasToggle="OffcanvasEnd" (click)="offcanvas.dismiss()">
-      {{ 'Annulla' | translate }}
-    </button>
-    <button type="button" mat-flat-button color="primary" (click)="save()">
-      {{ 'Salva' | translate }}
-    </button>
-  </div>
-</div>
+<!-- Pagination -->
+<mat-paginator *ngIf="items && items.totalCount > items.pageSize" [length]="items.totalCount"
+    [pageSize]="items.pageSize" [hidePageSize]="true" (page)="onPageChange($event)" showFirstLastButtons />

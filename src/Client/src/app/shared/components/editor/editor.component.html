@@ -4,6 +4,14 @@
       <h5 class="title">{{ config.title | translate }}</h5>
       <p *ngIf="config.subtitle" class="subtitle">{{ config.subtitle | translate }}</p>
     </div>
+    <p-tabMenu [model]="tabs" [activeItem]="activeTab" (activeItemChange)="activeTab = $event">
+      <ng-template pTemplate="item" let-item>
+        <div class="tab-item">
+          <i class="tab-icon {{item.icon}}"></i>
+          <span class="tab-text">{{ item.label }}</span>
+        </div>
+      </ng-template>
+    </p-tabMenu>
   </div>
 </div>
 
@@ -18,11 +26,11 @@
 
 <div class="offcanvas-footer">
   <div class="offcanvas-footer-content">
-    <button type="button" mat-stroked-button class="me-2" cOffcanvasToggle="OffcanvasEnd" (click)="offcanvas.dismiss()">
+    <p-button styleClass="p-button-text me-2" (click)="offcanvas.dismiss()">
       {{ 'Annulla' | translate }}
-    </button>
-    <button type="button" mat-flat-button color="primary" *ngIf="!config.hideButton" (click)="save()">
+    </p-button>
+    <p-button styleClass="p-button-primary" (click)="save()">
       {{ 'Salva' | translate }}
-    </button>
+    </p-button>
   </div>
 </div>

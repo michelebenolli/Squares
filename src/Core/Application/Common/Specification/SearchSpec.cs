@@ -1,19 +1,18 @@
-﻿namespace Squares.Application.Common.Specification;
+﻿using System.Linq.Expressions;
 
-public class SearchSpec<T, TResult> : Specification<T, TResult>
-{
-    public SearchSpec(BaseRequest request)
-    {
-        Filter reqFilter = new Filter { Logic = "and", Filters = request.Filters };
-        Query.SearchBy(reqFilter);
-    }
-}
-
+namespace Squares.Application.Common.Specification;
 public class SearchSpec<T> : Specification<T>
 {
-    public SearchSpec(BaseRequest request)
+    public SearchSpec(
+        BaseRequest request,
+        Dictionary<string, Expression<Func<T, object?>>>? orderBy = null)
     {
-        Filter reqFilter = new Filter { Logic = "and", Filters = request.Filters };
-        Query.SearchBy(reqFilter).OrderBy(request.OrderBy);
+        var filter = new Filter
+        {
+            Logic = FilterLogic.AND,
+            Filters = request.Filters?.Where(x => x.Field?.StartsWith("@") != true)
+        };
+
+        Query.SearchBy(filter).OrderBy(request.OrderBy, orderBy);
     }
 }
